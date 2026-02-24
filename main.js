@@ -38,7 +38,7 @@ function renderSidebar() {
 
         // Category header
         const header = document.createElement('div');
-        header.className = 'category-header';
+        header.className = 'category-header collapsed';
         header.innerHTML = `
       <span>${cat.icon} ${cat.name} (${solvedInCat}/${cat.problems.length})</span>
       <span class="arrow">▼</span>
@@ -51,8 +51,7 @@ function renderSidebar() {
 
         // Problem items
         const items = document.createElement('div');
-        items.className = 'category-items';
-        items.style.maxHeight = '2000px';
+        items.className = 'category-items collapsed';
 
         cat.problems.forEach(problem => {
             const item = document.createElement('div');
