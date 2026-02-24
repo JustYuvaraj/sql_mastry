@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Interview Mastery — 200 Problems</title>
+  <meta name="description" content="Master SQL for FAANG interviews with 200 curated problems. Practice with in-browser SQLite — zero setup required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1>⚡ SQL Mastery</h1>
+        <p class="subtitle">200 Interview Problems</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-text" id="progressText">0 / 200 solved</p>
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Search problems..." />
+      </div>
+      <nav id="problemList"></nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent">
+      <!-- Welcome Screen -->
+      <div id="welcomeScreen" class="welcome">
+        <div class="welcome-inner">
+          <h2>⚡ SQL Interview Mastery</h2>
+          <p>200 curated problems to crack any FAANG/SDE SQL interview</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-num" id="totalCount">200</span>
+              <span class="stat-label">Problems</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num">13</span>
+              <span class="stat-label">Patterns</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num">10</span>
+              <span class="stat-label">Tables</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num">0</span>
+              <span class="stat-label">Setup</span>
+            </div>
+          </div>
+          <p class="hint-text">👈 Pick a problem from the sidebar to start</p>
+        </div>
+      </div>
+
+      <!-- Problem View -->
+      <div id="problemView" class="problem-view" style="display:none;">
+        <div class="problem-header">
+          <div class="problem-meta">
+            <span class="problem-id" id="problemId"></span>
+            <span class="difficulty-badge" id="difficultyBadge"></span>
+            <span class="category-badge" id="categoryBadge"></span>
+          </div>
+          <h2 id="problemTitle"></h2>
+          <p id="problemDesc" class="problem-desc"></p>
+        </div>
+
+        <div class="editor-section">
+          <div class="editor-header">
+            <span>💻 SQL Editor</span>
+            <div class="editor-actions">
+              <button id="hintBtn" class="btn btn-ghost">💡 Hint</button>
+              <button id="solutionBtn" class="btn btn-ghost">🔑 Solution</button>
+              <button id="resetBtn" class="btn btn-ghost">🔄 Reset</button>
+              <button id="runBtn" class="btn btn-primary">▶ Run Query</button>
+            </div>
+          </div>
+          <textarea id="sqlEditor" spellcheck="false" placeholder="-- Write your SQL query here..."></textarea>
+          <div id="hintBox" class="hint-box" style="display:none;"></div>
+          <div id="solutionBox" class="solution-box" style="display:none;"></div>
+        </div>
+
+        <div class="results-section">
+          <div class="results-header">
+            <span>📊 Results</span>
+            <span id="resultStatus" class="result-status"></span>
+          </div>
+          <div id="resultsArea" class="results-area">
+            <p class="placeholder-text">Run your query to see results here</p>
+          </div>
+        </div>
+
+        <div class="expected-section" id="expectedSection" style="display:none;">
+          <div class="expected-header">
+            <span>✅ Expected Output</span>
+          </div>
+          <div id="expectedArea" class="expected-area"></div>
+        </div>
+
+        <div class="nav-buttons">
+          <button id="prevBtn" class="btn btn-outline">← Previous</button>
+          <button id="nextBtn" class="btn btn-outline">Next →</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
