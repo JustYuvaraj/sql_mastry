@@ -1,11 +1,18 @@
 // SQL Interview Mastery — Main Application
 import { categories, allProblems } from './problems/index.js';
 import { initializeDatabase } from './db/schema.js';
+import { selectBasicsNotes } from './notes/select-basics.js';
 
 // ===== Global State =====
 let db = null;
 let currentProblem = null;
 let solved = new Set(JSON.parse(localStorage.getItem('sqlMasterySolved') || '[]'));
+
+// ===== Study Guide Notes Map =====
+const notesMap = {
+    'SELECT Basics': selectBasicsNotes,
+    // More categories will be added as each notes file is created
+};
 
 // ===== Initialize sql.js =====
 async function initDB() {
@@ -41,8 +48,19 @@ function renderSidebar() {
         header.className = 'category-header collapsed';
         header.innerHTML = `
       <span>${cat.icon} ${cat.name} (${solvedInCat}/${cat.problems.length})</span>
-      <span class="arrow">▼</span>
+      <div class="header-right">
+        ${notesMap[cat.name] ? `<button class="notes-btn" title="Study Guide" data-cat="${cat.name}">📖 Notes</button>` : ''}
+        <span class="arrow">▼</span>
+      </div>
     `;
+        // Notes button: prevent collapse toggle
+        const notesBtn = header.querySelector('.notes-btn');
+        if (notesBtn) {
+            notesBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openStudyGuide(cat.name);
+            });
+        }
         header.addEventListener('click', () => {
             header.classList.toggle('collapsed');
             items.classList.toggle('collapsed');
@@ -312,6 +330,7 @@ async function init() {
         setupSearch();
         setupNavigation();
         setupButtons();
+        setupStudyGuide();
         console.log(`🚀 SQL Mastery loaded with ${allProblems.length} problems`);
     } catch (e) {
         console.error('Failed to initialize:', e);
@@ -323,6 +342,63 @@ async function init() {
       </div>
     `;
     }
+}
+
+// ===== Study Guide =====
+function openStudyGuide(categoryName) {
+    const notes = notesMap[categoryName];
+    if (!notes) return;
+
+    document.getElementById('studyGuideIcon').textContent = notes.icon;
+    document.getElementById('studyGuideTitle').textContent = `${notes.category} — Study Guide`;
+
+    // Render tabs
+    const tabsEl = document.getElementById('studyGuideTabs');
+    tabsEl.innerHTML = notes.sections.map((s, i) =>
+        `<button class="study-tab ${i === 0 ? 'active' : ''}" data-idx="${i}">${s.title.split(' ').slice(0, 3).join(' ')}</button>`
+    ).join('');
+
+    // Show first section
+    showStudySection(notes, 0);
+
+    // Tab click
+    tabsEl.querySelectorAll('.study-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabsEl.querySelectorAll('.study-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showStudySection(notes, parseInt(btn.dataset.idx));
+        });
+    });
+
+    document.getElementById('studyGuideOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function showStudySection(notes, idx) {
+    const s = notes.sections[idx];
+    document.getElementById('studyGuideBody').innerHTML = `
+        <div class="study-section">
+            <h3 class="study-section-title">${s.title}</h3>
+            <pre class="study-pre">${escapeHtml(s.content)}</pre>
+        </div>
+    `;
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function setupStudyGuide() {
+    document.getElementById('closeStudyGuide').addEventListener('click', () => {
+        document.getElementById('studyGuideOverlay').style.display = 'none';
+        document.body.style.overflow = '';
+    });
+    document.getElementById('studyGuideOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('studyGuideOverlay')) {
+            document.getElementById('studyGuideOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
 }
 
 init();

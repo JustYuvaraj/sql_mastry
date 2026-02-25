@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SQL Interview Mastery — 200 Problems</title>
+  <title>SQL Interview Mastery — 251 Problems</title>
   <meta name="description" content="Master SQL for FAANG interviews with 200 curated problems. Practice with in-browser SQLite — zero setup required." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +16,7 @@
     <aside id="sidebar">
       <div class="sidebar-header">
         <h1>⚡ SQL Mastery</h1>
-        <p class="subtitle">200 Interview Problems</p>
+        <p class="subtitle">251 Interview Problems</p>
         <div class="progress-bar-container">
           <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -34,10 +34,10 @@
       <div id="welcomeScreen" class="welcome">
         <div class="welcome-inner">
           <h2>⚡ SQL Interview Mastery</h2>
-          <p>200 curated problems to crack any FAANG/SDE SQL interview</p>
+          <p>251 curated problems to crack any FAANG/SDE SQL interview</p>
           <div class="stats-grid">
             <div class="stat-card">
-              <span class="stat-num" id="totalCount">200</span>
+              <span class="stat-num" id="totalCount">251</span>
               <span class="stat-label">Problems</span>
             </div>
             <div class="stat-card">
@@ -107,6 +107,21 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Study Guide Modal -->
+  <div id="studyGuideOverlay" class="study-overlay" style="display:none;">
+    <div class="study-modal">
+      <div class="study-modal-header">
+        <div class="study-modal-title">
+          <span id="studyGuideIcon">📋</span>
+          <h2 id="studyGuideTitle">Study Guide</h2>
+        </div>
+        <button id="closeStudyGuide" class="study-close-btn">✕</button>
+      </div>
+      <div class="study-modal-tabs" id="studyGuideTabs"></div>
+      <div class="study-modal-body" id="studyGuideBody"></div>
+    </div>
   </div>
 
   <script type="module" src="/main.js"></script>
