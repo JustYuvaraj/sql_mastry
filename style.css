@@ -23,13 +23,16 @@
 }
 
 /* ===== Reset ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
 }
@@ -219,9 +222,17 @@ body {
   flex-shrink: 0;
 }
 
-.diff-dot.easy { background: var(--easy); }
-.diff-dot.medium { background: var(--medium); }
-.diff-dot.hard { background: var(--hard); }
+.diff-dot.easy {
+  background: var(--easy);
+}
+
+.diff-dot.medium {
+  background: var(--medium);
+}
+
+.diff-dot.hard {
+  background: var(--hard);
+}
 
 /* ===== Main Content ===== */
 #mainContent {
@@ -267,7 +278,7 @@ body {
   margin-bottom: 8px;
 }
 
-.welcome-inner > p {
+.welcome-inner>p {
   color: var(--text-secondary);
   font-size: 1.1rem;
   margin-bottom: 32px;
@@ -308,8 +319,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ===== Problem View ===== */
@@ -335,7 +353,8 @@ body {
   font-family: var(--font-mono);
 }
 
-.difficulty-badge, .category-badge {
+.difficulty-badge,
+.category-badge {
   font-size: 0.7rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -344,9 +363,20 @@ body {
   letter-spacing: 0.05em;
 }
 
-.difficulty-badge.easy { background: rgba(63,185,80,0.15); color: var(--easy); }
-.difficulty-badge.medium { background: rgba(210,153,34,0.15); color: var(--medium); }
-.difficulty-badge.hard { background: rgba(248,81,73,0.15); color: var(--hard); }
+.difficulty-badge.easy {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--easy);
+}
+
+.difficulty-badge.medium {
+  background: rgba(210, 153, 34, 0.15);
+  color: var(--medium);
+}
+
+.difficulty-badge.hard {
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--hard);
+}
 
 .category-badge {
   background: var(--accent-glow);
@@ -459,7 +489,8 @@ body {
 }
 
 /* ===== Hint & Solution Boxes ===== */
-.hint-box, .solution-box {
+.hint-box,
+.solution-box {
   margin-top: 8px;
   padding: 14px 16px;
   border-radius: 10px;
@@ -483,16 +514,25 @@ body {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== Results ===== */
-.results-section, .expected-section {
+.results-section,
+.expected-section {
   margin-bottom: 20px;
 }
 
-.results-header, .expected-header {
+.results-header,
+.expected-header {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -519,7 +559,8 @@ body {
   color: var(--danger);
 }
 
-.results-area, .expected-area {
+.results-area,
+.expected-area {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -659,8 +700,13 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .study-modal {
@@ -678,8 +724,15 @@ body {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .study-modal-header {
@@ -744,6 +797,7 @@ body {
 .study-modal-tabs::-webkit-scrollbar {
   height: 4px;
 }
+
 .study-modal-tabs::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
@@ -784,29 +838,246 @@ body {
 .study-modal-body::-webkit-scrollbar {
   width: 6px;
 }
+
 .study-modal-body::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 3px;
 }
 
 .study-section-title {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 16px;
-  padding-bottom: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
-.study-pre {
-  font-family: var(--font-mono);
-  font-size: 0.83rem;
-  line-height: 1.75;
+/* Study content container */
+.study-content {
   color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 0.9rem;
+}
+
+.study-content h4 {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.study-content p {
+  margin-bottom: 12px;
+}
+
+.study-content code {
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+/* Callout boxes */
+.note-callout {
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  border-left: 4px solid;
+}
+
+.note-callout.note-tip {
+  background: rgba(63, 185, 80, 0.08);
+  border-left-color: var(--success);
+  color: #7ee787;
+}
+
+.note-callout.note-danger {
+  background: rgba(248, 81, 73, 0.08);
+  border-left-color: var(--danger);
+  color: #ffa198;
+}
+
+.note-callout.note-info {
+  background: rgba(88, 166, 255, 0.08);
+  border-left-color: var(--accent);
+  color: #79c0ff;
+}
+
+/* Code blocks */
+.note-code {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: #c9d1d9;
   white-space: pre-wrap;
   word-break: break-word;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.note-code.cheat {
+  font-size: 0.85rem;
+  line-height: 2;
+  border-color: var(--accent);
+  background: rgba(88, 166, 255, 0.04);
+}
+
+.note-code.compact {
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.code-hl {
+  color: #ff7b72;
+  font-weight: 600;
+}
+
+.code-good {
+  color: var(--success);
+}
+
+.code-bad {
+  color: var(--danger);
+}
+
+.code-comment {
+  color: #6e7681;
+  font-style: italic;
+}
+
+/* Tables */
+.note-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 0.83rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.note-table th {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+}
+
+.note-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+  color: var(--text-secondary);
+}
+
+.note-table tr:last-child td {
+  border-bottom: none;
+}
+
+.note-table tr:hover td {
+  background: rgba(88, 166, 255, 0.04);
+}
+
+.note-table.mistakes td:nth-child(2) {
+  color: var(--danger);
+}
+
+.note-table.mistakes td:nth-child(3) {
+  color: var(--success);
+}
+
+/* Card grid */
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.note-card {
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 20px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.note-card:hover {
+  border-color: rgba(88, 166, 255, 0.3);
+}
+
+.note-card h4 {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.note-card.pattern {
+  border-left: 3px solid var(--accent);
+}
+
+.note-card .note-code {
+  margin-bottom: 0;
+  font-size: 0.78rem;
+}
+
+.note-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* Two column layout */
+.note-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.note-col {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.note-col h4 {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* Ordered list styling */
+.note-ol {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.note-ol li {
+  padding: 3px 0;
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+}
+
+.note-ol.highlight li {
+  color: var(--text-primary);
 }

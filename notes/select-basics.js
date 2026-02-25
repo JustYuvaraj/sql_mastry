@@ -1,299 +1,496 @@
 export const selectBasicsNotes = {
-    category: "SELECT Basics",
-    icon: "📋",
-    color: "#6366f1",
-    sections: [
-        {
-            title: "🧱 Core Syntax — The Execution Order (Most Important!)",
-            content: `SQL does NOT execute in the order you write it. Knowing this prevents 90% of beginner errors.
+  category: "SELECT Basics",
+  icon: "📋",
+  color: "#6366f1",
+  sections: [
+    {
+      title: "🧱 Execution Order",
+      content: `
+<div class="note-callout note-danger">
+  <strong>⚠️ SQL does NOT execute in the order you write it!</strong> Knowing this prevents 90% of beginner errors.
+</div>
 
-WRITE ORDER:          EXECUTION ORDER:
-SELECT                1️⃣  FROM      (which tables?)
-FROM                  2️⃣  WHERE     (filter rows)
-WHERE                 3️⃣  GROUP BY  (group rows)
-GROUP BY              4️⃣  HAVING    (filter groups)
-HAVING                5️⃣  SELECT    (pick columns)
-ORDER BY              6️⃣  ORDER BY  (sort output)
-LIMIT                 7️⃣  LIMIT     (cap rows)
+<div class="note-two-col">
+  <div class="note-col">
+    <h4>✍️ Write Order</h4>
+    <ol class="note-ol">
+      <li><code>SELECT</code></li>
+      <li><code>FROM</code></li>
+      <li><code>WHERE</code></li>
+      <li><code>GROUP BY</code></li>
+      <li><code>HAVING</code></li>
+      <li><code>ORDER BY</code></li>
+      <li><code>LIMIT</code></li>
+    </ol>
+  </div>
+  <div class="note-col">
+    <h4>⚙️ Execution Order</h4>
+    <ol class="note-ol highlight">
+      <li><code>FROM</code> — pick tables</li>
+      <li><code>WHERE</code> — filter rows</li>
+      <li><code>GROUP BY</code> — group rows</li>
+      <li><code>HAVING</code> — filter groups</li>
+      <li><code>SELECT</code> — pick columns</li>
+      <li><code>ORDER BY</code> — sort</li>
+      <li><code>LIMIT</code> — cap rows</li>
+    </ol>
+  </div>
+</div>
 
-💡 Key Insight: WHERE runs BEFORE SELECT, so you cannot use a SELECT alias inside WHERE.
-   WRONG: SELECT salary * 1.1 AS new_sal WHERE new_sal > 50000
-   RIGHT: SELECT salary * 1.1 AS new_sal WHERE salary * 1.1 > 50000`
-        },
-        {
-            title: "📌 SELECT Clause — Every Trick You Need",
-            content: `-- 1. Select all columns
-SELECT * FROM employees;
+<div class="note-callout note-tip">
+  <strong>💡 Key Insight:</strong> <code>WHERE</code> runs <strong>before</strong> <code>SELECT</code>, so you <strong>cannot</strong> use a SELECT alias in WHERE.
+</div>
 
--- 2. Select specific columns
-SELECT name, salary FROM employees;
+<div class="note-code">
+<span class="code-bad">-- ❌ WRONG</span>
+SELECT salary * 1.1 AS new_sal
+WHERE new_sal > 50000;
 
--- 3. Column alias (AS is optional)
-SELECT name AS employee_name, salary annual_salary FROM employees;
+<span class="code-good">-- ✅ RIGHT</span>
+SELECT salary * 1.1 AS new_sal
+WHERE salary * 1.1 > 50000;
+</div>`
+    },
+    {
+      title: "📌 SELECT Tricks",
+      content: `
+<div class="note-grid">
 
--- 4. String literal in SELECT
-SELECT name, 'Active' AS status FROM employees;
+<div class="note-card">
+  <h4>Select All / Specific</h4>
+  <div class="note-code">SELECT * FROM employees;
+SELECT name, salary FROM employees;</div>
+</div>
 
--- 5. Math in SELECT
-SELECT name, salary, salary * 1.2 AS raise FROM employees;
+<div class="note-card">
+  <h4>Aliases (AS is optional)</h4>
+  <div class="note-code">SELECT name <span class="code-hl">AS</span> employee_name,
+       salary <span class="code-hl">annual_pay</span>
+FROM employees;</div>
+</div>
 
--- 6. Concatenation (SQLite uses ||)
-SELECT first_name || ' ' || last_name AS full_name FROM employees;
+<div class="note-card">
+  <h4>Math in SELECT</h4>
+  <div class="note-code">SELECT name, salary,
+       salary * 1.2 AS raise,
+       <span class="code-hl">ROUND</span>(salary / 12.0, 2) AS monthly
+FROM employees;</div>
+</div>
 
--- 7. DISTINCT — remove duplicates
-SELECT DISTINCT department_id FROM employees;
+<div class="note-card">
+  <h4>String Concatenation</h4>
+  <div class="note-code">SELECT first_name <span class="code-hl">||</span> ' ' <span class="code-hl">||</span> last_name
+       AS full_name
+FROM employees;</div>
+</div>
 
--- 8. ROUND — control decimal places
-SELECT name, ROUND(salary / 12.0, 2) AS monthly_salary FROM employees;
+<div class="note-card">
+  <h4>DISTINCT — Remove Dupes</h4>
+  <div class="note-code">SELECT <span class="code-hl">DISTINCT</span> department_id
+FROM employees;</div>
+</div>
 
--- 9. COALESCE — replace NULL with a default
-SELECT name, COALESCE(salary, 0) AS salary FROM employees;
+<div class="note-card">
+  <h4>COALESCE — Replace NULL</h4>
+  <div class="note-code">SELECT name,
+  <span class="code-hl">COALESCE</span>(salary, 0) AS salary
+FROM employees;</div>
+</div>
 
--- 10. CASE WHEN inline (see full CASE section later)
-SELECT name, CASE WHEN salary > 80000 THEN 'Senior' ELSE 'Junior' END AS level FROM employees;`
-        },
-        {
-            title: "🔢 NULL — The Silent Killer",
-            content: `NULL is not a value — it is the ABSENCE of a value.
+<div class="note-card">
+  <h4>Inline CASE WHEN</h4>
+  <div class="note-code">SELECT name,
+  <span class="code-hl">CASE WHEN</span> salary > 80000
+       <span class="code-hl">THEN</span> 'Senior'
+       <span class="code-hl">ELSE</span> 'Junior'
+  <span class="code-hl">END</span> AS level
+FROM employees;</div>
+</div>
 
-Rules of NULL:
-  NULL = NULL   → FALSE  (use IS NULL instead)
-  NULL != NULL  → FALSE
-  NULL + 5      → NULL   (any arithmetic with NULL = NULL)
-  NULL OR TRUE  → TRUE   (special case)
-  NULL AND FALSE → FALSE  (special case)
+<div class="note-card">
+  <h4>String Literal Column</h4>
+  <div class="note-code">SELECT name,
+  <span class="code-hl">'Active'</span> AS status
+FROM employees;</div>
+</div>
 
-✅ Correct checks:
-  WHERE column IS NULL
-  WHERE column IS NOT NULL
-  COALESCE(column, 'default')   -- replace NULL with a value
-  NULLIF(column, 0)             -- turn 0 into NULL (useful for DIV/0)
+</div>`
+    },
+    {
+      title: "🔢 NULL Rules",
+      content: `
+<div class="note-callout note-danger">
+  <strong>NULL is NOT a value — it is the ABSENCE of a value.</strong>
+</div>
 
-❌ Wrong:
-  WHERE column = NULL  -- always returns 0 rows!
+<table class="note-table">
+  <thead>
+    <tr><th>Expression</th><th>Result</th><th>Why?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>NULL = NULL</code></td><td class="code-bad">FALSE</td><td>Use <code>IS NULL</code> instead</td></tr>
+    <tr><td><code>NULL != NULL</code></td><td class="code-bad">FALSE</td><td>Same reason</td></tr>
+    <tr><td><code>NULL + 5</code></td><td class="code-bad">NULL</td><td>Any math with NULL = NULL</td></tr>
+    <tr><td><code>NULL OR TRUE</code></td><td class="code-good">TRUE</td><td>Special case</td></tr>
+    <tr><td><code>NULL AND FALSE</code></td><td class="code-good">FALSE</td><td>Special case</td></tr>
+  </tbody>
+</table>
 
-💡 Interview Trap: COUNT(*) counts all rows including NULLs.
-   COUNT(column) skips NULLs. Always clarify which count you want.`
-        },
-        {
-            title: "🔤 String Functions (SQLite)",
-            content: `-- Length of string
-SELECT LENGTH(name) FROM employees;
+<h4 style="margin-top: 20px;">✅ Correct NULL Checks</h4>
+<div class="note-code">WHERE column <span class="code-hl">IS NULL</span>
+WHERE column <span class="code-hl">IS NOT NULL</span>
+<span class="code-hl">COALESCE</span>(column, 'default')   -- replace NULL
+<span class="code-hl">NULLIF</span>(column, 0)             -- turn 0 → NULL (avoid DIV/0)</div>
 
--- Upper / Lower case
-SELECT UPPER(name), LOWER(email) FROM employees;
+<div class="note-callout note-danger">
+  <strong>❌ NEVER do this:</strong> <code>WHERE column = NULL</code> — always returns 0 rows!
+</div>
 
--- Substring (1-indexed!)
-SELECT SUBSTR(name, 1, 3) AS first3 FROM employees;  -- first 3 chars
-SELECT SUBSTR(name, -3)   AS last3  FROM employees;  -- last 3 chars
+<div class="note-callout note-tip">
+  <strong>🎯 Interview Trap:</strong><br>
+  <code>COUNT(*)</code> counts all rows <strong>including</strong> NULLs.<br>
+  <code>COUNT(column)</code> <strong>skips</strong> NULLs. Always clarify which one you need.
+</div>`
+    },
+    {
+      title: "🔤 String Functions",
+      content: `
+<table class="note-table">
+  <thead>
+    <tr><th>Function</th><th>Example</th><th>Result</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>LENGTH()</code></td><td><code>LENGTH('Hello')</code></td><td>5</td></tr>
+    <tr><td><code>UPPER()</code></td><td><code>UPPER('hello')</code></td><td>HELLO</td></tr>
+    <tr><td><code>LOWER()</code></td><td><code>LOWER('HELLO')</code></td><td>hello</td></tr>
+    <tr><td><code>SUBSTR()</code></td><td><code>SUBSTR('Hello', 1, 3)</code></td><td>Hel</td></tr>
+    <tr><td><code>SUBSTR()</code></td><td><code>SUBSTR('Hello', -3)</code></td><td>llo</td></tr>
+    <tr><td><code>REPLACE()</code></td><td><code>REPLACE('a@b.com','@b.com','')</code></td><td>a</td></tr>
+    <tr><td><code>TRIM()</code></td><td><code>TRIM('  hi  ')</code></td><td>hi</td></tr>
+    <tr><td><code>INSTR()</code></td><td><code>INSTR('a@b.com', '@')</code></td><td>2</td></tr>
+    <tr><td><code>||</code></td><td><code>'Hi' || ' ' || 'World'</code></td><td>Hi World</td></tr>
+  </tbody>
+</table>
 
--- Replace
-SELECT REPLACE(email, '@company.com', '') AS username FROM employees;
+<h4 style="margin-top: 20px;">LIKE Pattern Matching</h4>
+<table class="note-table">
+  <thead>
+    <tr><th>Pattern</th><th>Matches</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>'%abc%'</code></td><td>Contains "abc"</td></tr>
+    <tr><td><code>'abc%'</code></td><td>Starts with "abc"</td></tr>
+    <tr><td><code>'%abc'</code></td><td>Ends with "abc"</td></tr>
+    <tr><td><code>'a_c'</code></td><td>a + any 1 char + c</td></tr>
+  </tbody>
+</table>
 
--- Trim whitespace
-SELECT TRIM(name) FROM employees;
-SELECT LTRIM(name), RTRIM(name) FROM employees;
+<div class="note-callout note-tip">
+  <strong>💡</strong> SQLite LIKE is <strong>case-insensitive for ASCII</strong> by default. <code>WHERE name LIKE 'john%'</code> matches John, JOHN, john.
+</div>`
+    },
+    {
+      title: "🔢 Numbers",
+      content: `
+<table class="note-table">
+  <thead>
+    <tr><th>Function</th><th>Example</th><th>Result</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ABS()</code></td><td><code>ABS(-42)</code></td><td>42</td></tr>
+    <tr><td><code>ROUND()</code></td><td><code>ROUND(3.456, 2)</code></td><td>3.46</td></tr>
+    <tr><td><code>CAST()</code></td><td><code>CAST(3.9 AS INTEGER)</code></td><td>3</td></tr>
+    <tr><td><code>%</code> (mod)</td><td><code>7 % 3</code></td><td>1</td></tr>
+  </tbody>
+</table>
 
--- Find position (INSTR)
-SELECT INSTR(email, '@') AS at_pos FROM employees;
+<div class="note-callout note-danger">
+  <strong>⚠️ Integer Division Trap!</strong>
+</div>
 
--- Concatenation
-SELECT name || ' — ' || department_id AS label FROM employees;
+<div class="note-code"><span class="code-bad">SELECT 7 / 2      → 3</span>     (integer division!)
+<span class="code-good">SELECT 7 / 2.0    → 3.5</span>   (float division ✅)
+<span class="code-good">SELECT 100.0 * count / total</span>  (always use .0 for percentages)</div>
 
--- LIKE pattern matching
-'%abc%'   → contains "abc"
-'abc%'    → starts with "abc"
-'%abc'    → ends with "abc"
-'a_c'     → a, any 1 char, c (underscore = 1 wildcard char)
+<div class="note-callout note-tip">
+  <strong>💡 Pro Tip:</strong> Always write <code>100.0 * count / total</code> (not <code>100 * count / total</code>) to avoid truncation to 0.
+</div>`
+    },
+    {
+      title: "📅 Date Functions",
+      content: `
+<h4>SQLite stores dates as TEXT: <code>'YYYY-MM-DD'</code></h4>
 
--- Case-insensitive by default in SQLite for ASCII
-WHERE name LIKE 'john%'   -- matches John, JOHN, john`
-        },
-        {
-            title: "🔢 Number Functions",
-            content: `-- Absolute value
-SELECT ABS(salary - 80000) AS diff FROM employees;
+<table class="note-table">
+  <thead>
+    <tr><th>Function</th><th>Example</th><th>What it does</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>date('now')</code></td><td><code>→ '2024-02-25'</code></td><td>Current date</td></tr>
+    <tr><td><code>strftime('%Y', d)</code></td><td><code>→ '2024'</code></td><td>Extract year</td></tr>
+    <tr><td><code>strftime('%m', d)</code></td><td><code>→ '02'</code></td><td>Extract month</td></tr>
+    <tr><td><code>strftime('%d', d)</code></td><td><code>→ '25'</code></td><td>Extract day</td></tr>
+    <tr><td><code>strftime('%w', d)</code></td><td><code>→ '2'</code></td><td>Weekday (0=Sun)</td></tr>
+  </tbody>
+</table>
 
--- Round, Floor, Ceil
-SELECT ROUND(3.7)   -- 4
-SELECT ROUND(3.456, 2) -- 3.46
--- SQLite has no FLOOR/CEIL — use CAST workaround:
-CAST(3.9 AS INTEGER)  -- 3 (truncates toward zero)
+<h4 style="margin-top: 20px;">Date Arithmetic</h4>
+<div class="note-code">date(hire_date, '<span class="code-hl">+30 days</span>')   -- 30 days later
+date(hire_date, '<span class="code-hl">-1 year</span>')    -- 1 year earlier
+date(hire_date, '<span class="code-hl">+1 month</span>')   -- 1 month later</div>
 
--- Integer division
-SELECT 7 / 2    -- 3 (integer division in SQLite if both operands are INT)
-SELECT 7 / 2.0  -- 3.5 (float division)
+<h4 style="margin-top: 20px;">Date Difference (in days)</h4>
+<div class="note-code"><span class="code-hl">julianday</span>('2024-12-31') - <span class="code-hl">julianday</span>(hire_date) AS days_employed</div>
 
--- Modulo (remainder)
-SELECT 7 % 3    -- 1
+<div class="note-callout note-tip">
+  <strong>🎯 Must-Know Pattern (LeetCode 197 — Rising Temperature):</strong>
+</div>
+<div class="note-code">SELECT a.id FROM weather a
+JOIN weather b
+  ON <span class="code-hl">julianday(a.date) - julianday(b.date) = 1</span>
+WHERE a.temperature > b.temperature;</div>`
+    },
+    {
+      title: "🏆 ORDER BY",
+      content: `
+<div class="note-grid">
 
--- Power / Square Root (SQLite does not have POWER/SQRT natively)
--- Use: exp(n * log(x)) for power, or just avoid in SQLite interviews
+<div class="note-card">
+  <h4>Basic Sorting</h4>
+  <div class="note-code">SELECT * FROM employees
+ORDER BY salary;          <span class="code-comment">-- ASC default</span>
 
-💡 Tip: Always use 100.0 * count / total (not 100 * count / total) to avoid integer division truncating to 0.`
-        },
-        {
-            title: "📅 Date Functions (SQLite)",
-            content: `-- SQLite stores dates as TEXT: 'YYYY-MM-DD'
+SELECT * FROM employees
+ORDER BY salary <span class="code-hl">DESC</span>;     <span class="code-comment">-- descending</span></div>
+</div>
 
--- Current date / time
-SELECT date('now');          -- '2024-02-25'
-SELECT datetime('now');      -- '2024-02-25 09:30:00'
+<div class="note-card">
+  <h4>Multi-Column Sort</h4>
+  <div class="note-code">ORDER BY dept_id <span class="code-hl">ASC</span>,
+         salary <span class="code-hl">DESC</span>;</div>
+  <p class="note-desc">First sort by department, then by salary within each dept.</p>
+</div>
 
--- Extract parts of a date using strftime
-SELECT strftime('%Y', hire_date) AS year   FROM employees;
-SELECT strftime('%m', hire_date) AS month  FROM employees;
-SELECT strftime('%d', hire_date) AS day    FROM employees;
-SELECT strftime('%Y-%m', hire_date) AS yearmonth FROM employees;
-SELECT strftime('%w', hire_date) AS weekday FROM employees;
--- %w: 0=Sunday, 1=Monday ... 6=Saturday
+<div class="note-card">
+  <h4>Sort by Expression</h4>
+  <div class="note-code">ORDER BY salary * 1.2 DESC;
+ORDER BY LENGTH(name) ASC;</div>
+</div>
 
--- Date arithmetic
-SELECT date(hire_date, '+30 days')  AS future FROM employees;
-SELECT date(hire_date, '-1 year')   AS past   FROM employees;
-SELECT date(hire_date, '+1 month')          FROM employees;
+<div class="note-card">
+  <h4>Push NULLs Last</h4>
+  <div class="note-code">ORDER BY
+  <span class="code-hl">CASE WHEN col IS NULL
+       THEN 1 ELSE 0 END</span>,
+  col;</div>
+</div>
 
--- Difference between dates (in days)
-SELECT julianday('2024-12-31') - julianday(hire_date) AS days_employed FROM employees;
-
--- Cast text date to year as integer
-SELECT CAST(strftime('%Y', hire_date) AS INTEGER) AS hire_year FROM employees;
-
-💡 Must-Know Pattern (LeetCode 197 — Rising Temperature):
-SELECT a.id FROM weather a JOIN weather b
-  ON julianday(a.date) - julianday(b.date) = 1
-  WHERE a.temperature > b.temperature;`
-        },
-        {
-            title: "🏆 ORDER BY — Sorting Like a Pro",
-            content: `-- Ascending (default)
-SELECT * FROM employees ORDER BY salary;
-
--- Descending
-SELECT * FROM employees ORDER BY salary DESC;
-
--- Multi-column sort
-SELECT * FROM employees ORDER BY department_id ASC, salary DESC;
-
--- Sort by column position (avoid in interviews, use names)
-SELECT name, salary FROM employees ORDER BY 2 DESC;
-
--- Sort by expression
-SELECT name, salary FROM employees ORDER BY salary * 1.2 DESC;
-
--- NULLs sort LAST in ASC, FIRST in DESC (SQLite default)
--- To push NULLs last always:
-ORDER BY CASE WHEN col IS NULL THEN 1 ELSE 0 END, col
-
--- Sort by CASE WHEN (custom order)
-ORDER BY CASE difficulty
+<div class="note-card">
+  <h4>Custom Sort Order</h4>
+  <div class="note-code">ORDER BY <span class="code-hl">CASE</span> difficulty
   WHEN 'easy' THEN 1
   WHEN 'medium' THEN 2
   WHEN 'hard' THEN 3
-END`
-        },
-        {
-            title: "📏 LIMIT & OFFSET (Pagination)",
-            content: `-- Top N rows
-SELECT * FROM employees ORDER BY salary DESC LIMIT 5;
+<span class="code-hl">END</span>;</div>
+</div>
 
--- Skip first N rows, take next M (pagination)
-SELECT * FROM employees ORDER BY id LIMIT 10 OFFSET 20;
--- Equivalent:
-SELECT * FROM employees ORDER BY id LIMIT 20, 10;  -- LIMIT offset, count
+</div>`
+    },
+    {
+      title: "📏 LIMIT & Pagination",
+      content: `
+<div class="note-grid">
 
--- Second highest salary (classic interview trap!)
--- WRONG: ORDER BY salary DESC LIMIT 1, 1 -- fails if no 2nd distinct value
--- RIGHT pattern (handles NULLs and ties):
-SELECT MAX(salary) FROM employees WHERE salary < (SELECT MAX(salary) FROM employees);
--- OR:
-SELECT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;`
-        },
-        {
-            title: "⚡ DISTINCT vs GROUP BY",
-            content: `-- DISTINCT: remove duplicate rows in final output
-SELECT DISTINCT department_id FROM employees;
-SELECT DISTINCT department_id, job_title FROM employees; -- distinct COMBINATIONS
+<div class="note-card">
+  <h4>Top N Rows</h4>
+  <div class="note-code">SELECT * FROM employees
+ORDER BY salary DESC
+<span class="code-hl">LIMIT 5</span>;</div>
+</div>
 
--- GROUP BY: collapse rows into groups for aggregation
-SELECT department_id, COUNT(*) FROM employees GROUP BY department_id;
+<div class="note-card">
+  <h4>Pagination (Skip + Take)</h4>
+  <div class="note-code"><span class="code-comment">-- Skip 20, take 10</span>
+SELECT * FROM employees
+ORDER BY id
+<span class="code-hl">LIMIT 10 OFFSET 20</span>;</div>
+</div>
 
--- They are NOT the same:
--- DISTINCT just de-dupes. GROUP BY allows aggregate functions.
+</div>
 
--- COUNT(DISTINCT col) — count unique values of ONE column
-SELECT COUNT(DISTINCT department_id) AS num_departments FROM employees;
+<div class="note-callout note-danger">
+  <strong>🎯 Classic Interview: Second Highest Salary (LeetCode 176)</strong>
+</div>
 
--- 💡 Trick: You can SELECT a column not in GROUP BY in SQLite (non-standard!)
--- but in PostgreSQL/MySQL this would be an error. Avoid it in interviews.`
-        },
-        {
-            title: "🎯 Must-Know Interview Patterns",
-            content: `-- Pattern 1: Second Highest (LeetCode 176)
-SELECT MAX(salary) AS SecondHighestSalary
-FROM employees WHERE salary < (SELECT MAX(salary) FROM employees);
+<div class="note-code"><span class="code-bad">-- ❌ Naive (fails with ties or missing 2nd value)</span>
+ORDER BY salary DESC LIMIT 1, 1;
 
--- Pattern 2: Nth Highest (generalised)
+<span class="code-good">-- ✅ Correct Pattern</span>
+SELECT <span class="code-hl">MAX</span>(salary) AS SecondHighestSalary
+FROM employees
+WHERE salary < (SELECT <span class="code-hl">MAX</span>(salary) FROM employees);
+
+<span class="code-good">-- ✅ Nth Highest (generalised)</span>
 SELECT salary FROM employees
-ORDER BY salary DESC LIMIT 1 OFFSET (N-1);  -- replace N
+ORDER BY salary DESC
+LIMIT 1 OFFSET (N-1);  <span class="code-comment">-- replace N</span></div>`
+    },
+    {
+      title: "⚡ DISTINCT vs GROUP BY",
+      content: `
+<div class="note-two-col">
+  <div class="note-col">
+    <h4>DISTINCT</h4>
+    <p class="note-desc">Remove duplicate rows in final output. No aggregation.</p>
+    <div class="note-code">SELECT <span class="code-hl">DISTINCT</span> dept_id
+FROM employees;
 
--- Pattern 3: Duplicate detection
-SELECT email, COUNT(*) FROM employees
-GROUP BY email HAVING COUNT(*) > 1;
+<span class="code-comment">-- Distinct COMBINATIONS</span>
+SELECT DISTINCT dept_id,
+       job_title
+FROM employees;</div>
+  </div>
+  <div class="note-col">
+    <h4>GROUP BY</h4>
+    <p class="note-desc">Collapse rows into groups → enables aggregation.</p>
+    <div class="note-code">SELECT dept_id,
+       <span class="code-hl">COUNT(*)</span>
+FROM employees
+<span class="code-hl">GROUP BY</span> dept_id;</div>
+  </div>
+</div>
 
--- Pattern 4: Self-referencing (LeetCode 181)
-SELECT e.name FROM employees e
-JOIN employees m ON e.manager_id = m.id
-WHERE e.salary > m.salary;
+<div class="note-callout note-tip">
+  <strong>💡 COUNT(DISTINCT col)</strong> — Count unique values of one column:
+</div>
+<div class="note-code">SELECT <span class="code-hl">COUNT(DISTINCT</span> department_id<span class="code-hl">)</span> AS num_depts
+FROM employees;</div>`
+    },
+    {
+      title: "🎯 Interview Patterns",
+      content: `
+<div class="note-grid">
 
--- Pattern 5: Rolling/Running aggregation
-SELECT *, SUM(salary) OVER (ORDER BY id) AS running_total FROM employees;
+<div class="note-card pattern">
+  <h4>1️⃣ Second Highest</h4>
+  <div class="note-code">SELECT MAX(salary) FROM employees
+WHERE salary < (
+  SELECT MAX(salary) FROM employees
+);</div>
+</div>
 
--- Pattern 6: Percentage calculation
-SELECT dept, ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM employees), 2) AS pct
-FROM employees GROUP BY dept;
+<div class="note-card pattern">
+  <h4>2️⃣ Duplicate Detection</h4>
+  <div class="note-code">SELECT email, COUNT(*)
+FROM employees
+GROUP BY email
+<span class="code-hl">HAVING COUNT(*) > 1</span>;</div>
+</div>
 
--- Pattern 7: Safe division (avoid DIV/0)
-SELECT CASE WHEN total = 0 THEN 0 ELSE numerator * 1.0 / total END FROM t;`
-        },
-        {
-            title: "🚫 Common Mistakes to Avoid",
-            content: `1. WHERE salary = NULL        ❌  →  WHERE salary IS NULL          ✅
-2. WHERE alias > 5000         ❌  →  WHERE column > 5000            ✅
-3. SELECT 5 / 2 = 2 (integer) ❌  →  SELECT 5 / 2.0 = 2.5          ✅
-4. LIKE '%John'  (wrong case) ❌  →  LIKE '%John%' or ILIKE       check
-5. ORDER BY in subquery       ❌  →  ORDER BY only in final SELECT  ✅
-6. SELECT * in subquery       ❌  →  Always select specific columns ✅
-7. Forgetting DISTINCT        ❌  →  Duplicates silently appear      ⚠️
-8. COUNT(col) vs COUNT(*)     ⚠️  →  COUNT(col) skips NULLs
-9. Modifying table in subquery (same table) — use alias trick
-10. Forgetting semicolons... (only matters in multi-statement scripts)`
-        },
-        {
-            title: "📝 Cheat Sheet — Quick Reference",
-            content: `SELECT [DISTINCT] col1, col2, expr AS alias
+<div class="note-card pattern">
+  <h4>3️⃣ Self-Join Comparison</h4>
+  <div class="note-code">SELECT e.name FROM employees e
+<span class="code-hl">JOIN</span> employees m
+  ON e.manager_id = m.id
+WHERE e.salary > m.salary;</div>
+</div>
+
+<div class="note-card pattern">
+  <h4>4️⃣ Running Total</h4>
+  <div class="note-code">SELECT *,
+  <span class="code-hl">SUM(salary) OVER (ORDER BY id)</span>
+  AS running_total
+FROM employees;</div>
+</div>
+
+<div class="note-card pattern">
+  <h4>5️⃣ Percentage Calc</h4>
+  <div class="note-code">SELECT dept,
+  ROUND(<span class="code-hl">100.0</span> * COUNT(*) /
+    (SELECT COUNT(*) FROM employees),
+  2) AS pct
+FROM employees GROUP BY dept;</div>
+</div>
+
+<div class="note-card pattern">
+  <h4>6️⃣ Safe Division (no DIV/0)</h4>
+  <div class="note-code">SELECT <span class="code-hl">CASE WHEN</span> total = 0
+  <span class="code-hl">THEN</span> 0
+  <span class="code-hl">ELSE</span> num * 1.0 / total
+<span class="code-hl">END</span> FROM t;</div>
+</div>
+
+</div>`
+    },
+    {
+      title: "🚫 Common Mistakes",
+      content: `
+<table class="note-table mistakes">
+  <thead>
+    <tr><th>#</th><th>❌ Wrong</th><th>✅ Right</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>WHERE salary = NULL</code></td><td><code>WHERE salary IS NULL</code></td></tr>
+    <tr><td>2</td><td><code>WHERE alias > 5000</code></td><td><code>WHERE column > 5000</code></td></tr>
+    <tr><td>3</td><td><code>SELECT 5/2</code> → 2 (integer!)</td><td><code>SELECT 5/2.0</code> → 2.5</td></tr>
+    <tr><td>4</td><td><code>COUNT(*)</code> when NULLs matter</td><td><code>COUNT(column)</code> skips NULLs</td></tr>
+    <tr><td>5</td><td>ORDER BY in subquery</td><td>ORDER BY only in final SELECT</td></tr>
+    <tr><td>6</td><td><code>SELECT *</code> in subquery</td><td>Select specific columns</td></tr>
+    <tr><td>7</td><td>Forgetting DISTINCT</td><td>Duplicates silently appear ⚠️</td></tr>
+    <tr><td>8</td><td>GROUP BY without HAVING filter</td><td>Use HAVING for group conditions</td></tr>
+    <tr><td>9</td><td><code>LIKE '%John'</code> (starts match?)</td><td><code>LIKE 'John%'</code> (starts with)</td></tr>
+    <tr><td>10</td><td>Using <code>=</code> for multiple values</td><td>Use <code>IN (v1, v2, v3)</code></td></tr>
+  </tbody>
+</table>`
+    },
+    {
+      title: "📝 Cheat Sheet",
+      content: `
+<div class="note-callout note-info">
+  <strong>Complete SELECT Syntax:</strong>
+</div>
+<div class="note-code cheat">SELECT [<span class="code-hl">DISTINCT</span>] col1, col2, expr <span class="code-hl">AS</span> alias
 FROM table_name
 WHERE condition
 GROUP BY col1
 HAVING aggregate_condition
-ORDER BY col1 [ASC|DESC]
-LIMIT n [OFFSET m];
+ORDER BY col1 [<span class="code-hl">ASC</span>|<span class="code-hl">DESC</span>]
+LIMIT n [OFFSET m];</div>
 
-Key Functions:
-  String: LENGTH, UPPER, LOWER, SUBSTR, REPLACE, TRIM, INSTR, LIKE
-  Number: ABS, ROUND, MOD(%), CAST, COALESCE, NULLIF
-  Date:   strftime('%Y/%m/%d/%w', date), julianday, date(col, '+N days')
-  Null:   IS NULL, IS NOT NULL, COALESCE(col, default)
+<div class="note-two-col" style="margin-top: 20px;">
+  <div class="note-col">
+    <h4>🔤 String</h4>
+    <div class="note-code compact">LENGTH  UPPER  LOWER
+SUBSTR  REPLACE  TRIM
+INSTR   LIKE   ||</div>
+  </div>
+  <div class="note-col">
+    <h4>🔢 Number</h4>
+    <div class="note-code compact">ABS   ROUND   CAST
+MOD(%)  COALESCE  NULLIF</div>
+  </div>
+</div>
+<div class="note-two-col">
+  <div class="note-col">
+    <h4>📅 Date</h4>
+    <div class="note-code compact">strftime('%Y/%m/%d', date)
+julianday(date)
+date(col, '+N days')</div>
+  </div>
+  <div class="note-col">
+    <h4>📊 Aggregates</h4>
+    <div class="note-code compact">COUNT(*)  COUNT(col)
+SUM  AVG  MIN  MAX</div>
+  </div>
+</div>
 
-Aggregate (use with GROUP BY or window):
-  COUNT(*), COUNT(col), SUM, AVG, MIN, MAX
-
-Key Keywords:
-  DISTINCT, AS, CASE WHEN...THEN...ELSE...END
-  BETWEEN x AND y  ← inclusive on both ends
-  IN (v1, v2, v3)
-  LIKE 'pattern', NOT LIKE
-  IS NULL, IS NOT NULL`
-        }
-    ]
+<div class="note-callout note-tip" style="margin-top: 16px;">
+  <strong>Key Operators:</strong><br>
+  <code>BETWEEN x AND y</code> (inclusive both ends) •
+  <code>IN (v1, v2, v3)</code> •
+  <code>IS NULL</code> •
+  <code>CASE WHEN...THEN...ELSE...END</code>
+</div>`
+    }
+  ]
 };

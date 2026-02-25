@@ -2,6 +2,16 @@
 import { categories, allProblems } from './problems/index.js';
 import { initializeDatabase } from './db/schema.js';
 import { selectBasicsNotes } from './notes/select-basics.js';
+import { whereFilteringNotes } from './notes/where-filtering.js';
+import { aggregatesNotes } from './notes/aggregates.js';
+import { groupByNotes } from './notes/group-by.js';
+import { joinsNotes } from './notes/joins.js';
+import { subqueriesNotes } from './notes/subqueries.js';
+import { windowFunctionsNotes } from './notes/window-functions.js';
+import { ctesNotes } from './notes/ctes.js';
+import { stringDateNotes } from './notes/string-date.js';
+import { caseWhenNotes } from './notes/case-when.js';
+import { advancedNotes } from './notes/advanced.js';
 
 // ===== Global State =====
 let db = null;
@@ -11,7 +21,16 @@ let solved = new Set(JSON.parse(localStorage.getItem('sqlMasterySolved') || '[]'
 // ===== Study Guide Notes Map =====
 const notesMap = {
     'SELECT Basics': selectBasicsNotes,
-    // More categories will be added as each notes file is created
+    'WHERE + Filtering': whereFilteringNotes,
+    'Aggregates': aggregatesNotes,
+    'GROUP BY + HAVING': groupByNotes,
+    'JOINs': joinsNotes,
+    'Subqueries': subqueriesNotes,
+    'Window Functions': windowFunctionsNotes,
+    'CTEs': ctesNotes,
+    'String + Date': stringDateNotes,
+    'CASE WHEN': caseWhenNotes,
+    'Advanced': advancedNotes,
 };
 
 // ===== Initialize sql.js =====
@@ -379,7 +398,7 @@ function showStudySection(notes, idx) {
     document.getElementById('studyGuideBody').innerHTML = `
         <div class="study-section">
             <h3 class="study-section-title">${s.title}</h3>
-            <pre class="study-pre">${escapeHtml(s.content)}</pre>
+            <div class="study-content">${s.content}</div>
         </div>
     `;
 }
