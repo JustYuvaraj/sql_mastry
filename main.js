@@ -1,423 +1,340 @@
-// SQL Interview Mastery — Main Application
-import { categories, allProblems } from './problems/index.js';
-import { initializeDatabase } from './db/schema.js';
-import { selectBasicsNotes } from './notes/select-basics.js';
-import { whereFilteringNotes } from './notes/where-filtering.js';
-import { aggregatesNotes } from './notes/aggregates.js';
-import { groupByNotes } from './notes/group-by.js';
-import { joinsNotes } from './notes/joins.js';
-import { subqueriesNotes } from './notes/subqueries.js';
-import { windowFunctionsNotes } from './notes/window-functions.js';
-import { ctesNotes } from './notes/ctes.js';
-import { stringDateNotes } from './notes/string-date.js';
-import { caseWhenNotes } from './notes/case-when.js';
-import { advancedNotes } from './notes/advanced.js';
+import { selectbasics } from './problems/select-basics.js';
+import { joins } from './problems/joins.js';
+import { aggregates } from './problems/aggregates.js';
+import { groupby } from './problems/group-by.js';
+import { subqueries } from './problems/subqueries.js';
+import { advanced } from './problems/advanced.js';
+import { windowfunctions } from './problems/window-functions.js';
+import { stringdate } from './problems/string-date.js';
 
-// ===== Global State =====
-let db = null;
-let currentProblem = null;
-let solved = new Set(JSON.parse(localStorage.getItem('sqlMasterySolved') || '[]'));
-
-// ===== Study Guide Notes Map =====
-const notesMap = {
-    'SELECT Basics': selectBasicsNotes,
-    'WHERE + Filtering': whereFilteringNotes,
-    'Aggregates': aggregatesNotes,
-    'GROUP BY + HAVING': groupByNotes,
-    'JOINs': joinsNotes,
-    'Subqueries': subqueriesNotes,
-    'Window Functions': windowFunctionsNotes,
-    'CTEs': ctesNotes,
-    'String + Date': stringDateNotes,
-    'CASE WHEN': caseWhenNotes,
-    'Advanced': advancedNotes,
+const allCategories = {
+    "Select": selectbasics,
+    "Basic Joins": joins,
+    "Basic Aggregate Functions": aggregates,
+    "Sorting and Grouping": groupby,
+    "Subqueries": subqueries,
+    "Advanced Select and Joins": advanced,
+    "Advanced String Functions / Regex / Clause": stringdate,
+    "Window Functions": windowfunctions
 };
 
-// ===== Initialize sql.js =====
-async function initDB() {
-    const SQL = await initSqlJs({
-        locateFile: file => `https://sql.js.org/dist/${file}`
-    });
+// Flatten all problems into a single ordered list
+const allProblems = [];
+for (const [cat, probs] of Object.entries(allCategories)) {
+    if (probs) probs.forEach(p => { p._category = cat; allProblems.push(p); });
+}
+
+let db = null;
+let SQL = null;
+let currentProblem = null;
+let currentIndex = -1;
+
+// ─── Initialize SQL.js ───
+async function initSQL() {
+    const config = {
+        locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm`
+    };
+    SQL = await initSqlJs(config);
+    console.log("SQL.js initialized");
+}
+
+// ─── MySQL → SQLite Schema Cleaner ───
+function cleanSchema(mysqlSql) {
+    if (!mysqlSql) return "";
+
+    // Perform multi-line replacements on the full string first
+    let cleaned = mysqlSql
+        .replace(/ENUM\s*\((?:[^)]|\n)*\)/gi, "VARCHAR(255)")
+        .replace(/Truncate table \w+/gi, "")
+        .replace(/unsigned/gi, "")
+        .replace(/AUTO_INCREMENT/gi, "")
+        .replace(/DEFAULT CHARSET=[a-z0-9]+/gi, "");
+
+    // Now split and ensure semicolons
+    return cleaned.split('\n')
+        .map(line => {
+            line = line.trim();
+            if (line.length > 0 && !line.endsWith(';')) return line + ';';
+            return line;
+        })
+        .filter(line => line.length > 0)
+        .join('\n');
+}
+
+function resetDB(schema) {
+    if (!SQL) return;
     db = new SQL.Database();
-    initializeDatabase(db);
-    console.log('✅ Database initialized with sample data');
+    try {
+        const cleaned = cleanSchema(schema);
+        // Use exec() to support multiple statements (CREATE + INSERTs)
+        db.exec(cleaned);
+    } catch (err) {
+        console.error("Schema injection error:", err.message);
+    }
 }
 
-// ===== Load sql.js from CDN =====
-function loadSqlJs() {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://sql.js.org/dist/sql-wasm.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
+// ─── Render Problem List (Left Panel: Problems Tab) ───
+function renderProblemList() {
+    const sidebar = document.getElementById('sidebar-content');
+    sidebar.innerHTML = '';
 
-// ===== Render Sidebar =====
-function renderSidebar() {
-    const list = document.getElementById('problemList');
-    list.innerHTML = '';
+    for (const [catName, problems] of Object.entries(allCategories)) {
+        if (!problems || problems.length === 0) continue;
 
-    categories.forEach(cat => {
-        const solvedInCat = cat.problems.filter(p => solved.has(p.id)).length;
+        const group = document.createElement('div');
+        group.className = 'category-group';
 
-        // Category header
-        const header = document.createElement('div');
-        header.className = 'category-header collapsed';
-        header.innerHTML = `
-      <span>${cat.icon} ${cat.name} (${solvedInCat}/${cat.problems.length})</span>
-      <div class="header-right">
-        ${notesMap[cat.name] ? `<button class="notes-btn" title="Study Guide" data-cat="${cat.name}">📖 Notes</button>` : ''}
-        <span class="arrow">▼</span>
-      </div>
-    `;
-        // Notes button: prevent collapse toggle
-        const notesBtn = header.querySelector('.notes-btn');
-        if (notesBtn) {
-            notesBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openStudyGuide(cat.name);
-            });
-        }
-        header.addEventListener('click', () => {
-            header.classList.toggle('collapsed');
-            items.classList.toggle('collapsed');
-        });
-        list.appendChild(header);
+        const title = document.createElement('div');
+        title.className = 'category-title';
+        title.textContent = catName;
+        group.appendChild(title);
 
-        // Problem items
-        const items = document.createElement('div');
-        items.className = 'category-items collapsed';
-
-        cat.problems.forEach(problem => {
+        problems.forEach(prob => {
             const item = document.createElement('div');
-            item.className = `problem-item ${solved.has(problem.id) ? 'solved' : ''} ${currentProblem?.id === problem.id ? 'active' : ''}`;
+            item.className = 'problem-item';
+            item.dataset.slug = prob.slug;
             item.innerHTML = `
-        <span class="diff-dot ${problem.difficulty}"></span>
-        <span>${problem.id}. ${problem.title}</span>
-      `;
-            item.addEventListener('click', () => loadProblem(problem));
-            items.appendChild(item);
+                <div class="problem-item-check"></div>
+                <span class="problem-item-title">${prob.title}</span>
+                <span class="problem-item-difficulty diff-${prob.difficulty}">${capitalize(prob.difficulty)}</span>
+            `;
+            item.onclick = () => selectProblem(prob);
+            group.appendChild(item);
         });
 
-        list.appendChild(items);
-    });
-
-    updateProgress();
-}
-
-// ===== Load Problem =====
-function loadProblem(problem) {
-    currentProblem = problem;
-
-    document.getElementById('welcomeScreen').style.display = 'none';
-    document.getElementById('problemView').style.display = 'block';
-
-    document.getElementById('problemId').textContent = `#${problem.id}`;
-    document.getElementById('problemTitle').textContent = problem.title;
-    document.getElementById('problemDesc').textContent = problem.description;
-
-    const diffBadge = document.getElementById('difficultyBadge');
-    diffBadge.textContent = problem.difficulty;
-    diffBadge.className = `difficulty-badge ${problem.difficulty}`;
-
-    document.getElementById('categoryBadge').textContent = problem.category;
-
-    // Reset editor and results
-    document.getElementById('sqlEditor').value = '';
-    document.getElementById('resultsArea').innerHTML = '<p class="placeholder-text">Run your query to see results here</p>';
-    document.getElementById('resultStatus').textContent = '';
-    document.getElementById('resultStatus').className = 'result-status';
-    document.getElementById('hintBox').style.display = 'none';
-    document.getElementById('solutionBox').style.display = 'none';
-    document.getElementById('expectedSection').style.display = 'none';
-
-    // Show expected output
-    showExpectedOutput(problem);
-
-    // Update sidebar active state
-    document.querySelectorAll('.problem-item').forEach(el => el.classList.remove('active'));
-    const items = document.querySelectorAll('.problem-item');
-    items.forEach(el => {
-        if (el.textContent.includes(`${problem.id}. ${problem.title}`)) {
-            el.classList.add('active');
-        }
-    });
-
-    // Scroll to top
-    document.getElementById('mainContent').scrollTop = 0;
-}
-
-// ===== Show Expected Output =====
-function showExpectedOutput(problem) {
-    try {
-        const results = db.exec(problem.solution);
-        if (results.length > 0) {
-            document.getElementById('expectedSection').style.display = 'block';
-            document.getElementById('expectedArea').innerHTML = renderTable(results[0]);
-        }
-    } catch (e) {
-        console.error('Error generating expected output:', e);
+        sidebar.appendChild(group);
     }
 }
 
-// ===== Run Query =====
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ─── Select Problem ───
+function selectProblem(prob) {
+    currentProblem = prob;
+    currentIndex = allProblems.indexOf(prob);
+
+    // Switch to Description tab
+    showTab('description');
+
+    // Update problem list active state
+    document.querySelectorAll('.problem-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.slug === prob.slug);
+    });
+
+    // Render description
+    const view = document.getElementById('description-view');
+    view.innerHTML = `
+        <h2 class="problem-number-title">${prob.id}. ${prob.title}</h2>
+        <div class="problem-tags">
+            <span class="tag tag-${prob.difficulty}">${capitalize(prob.difficulty)}</span>
+        </div>
+        <div class="sql-schema-link">
+            <span>SQL Schema</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+        <div class="description-body">${prob.description}</div>
+    `;
+
+    // Attach click handler to the newly created schema link
+    const schemaLink = view.querySelector('.sql-schema-link');
+    if (schemaLink) {
+        schemaLink.onclick = () => showSchemaModal();
+    }
+
+    // Update bottom bar
+    document.getElementById('difficulty-label').textContent = capitalize(prob.difficulty);
+
+    // Update counter
+    document.getElementById('problem-counter').textContent = `${currentIndex + 1} / ${allProblems.length}`;
+
+    // Reset editor
+    document.getElementById('sql-editor').value = '-- Write your MySQL query statement below\n';
+    document.getElementById('results-container').innerHTML = '<div class="empty-state"><p>Click <strong>Run</strong> to see results</p></div>';
+
+    // Load schema into DB
+    resetDB(prob.schema);
+}
+
+// ─── Tab Switching ───
+function showTab(tabName) {
+    const descTab = document.getElementById('tab-description');
+    const probTab = document.getElementById('tab-problems');
+    const descView = document.getElementById('description-view');
+    const probView = document.getElementById('problems-view');
+
+    if (tabName === 'description') {
+        descTab.classList.add('active');
+        probTab.classList.remove('active');
+        descView.style.display = '';
+        probView.style.display = 'none';
+    } else {
+        descTab.classList.remove('active');
+        probTab.classList.add('active');
+        descView.style.display = 'none';
+        probView.style.display = '';
+    }
+}
+
+// ─── Run Query ───
 function runQuery() {
-    const sql = document.getElementById('sqlEditor').value.trim();
-    if (!sql) {
-        showError('Please enter a SQL query');
-        return;
-    }
+    if (!db) return;
+    const sql = document.getElementById('sql-editor').value;
+    const container = document.getElementById('results-container');
+    container.innerHTML = '';
+
+    // Switch to Test Result tab
+    document.getElementById('tab-result').classList.add('active');
+    document.getElementById('tab-testcase').classList.remove('active');
 
     try {
-        const results = db.exec(sql);
-        if (results.length === 0) {
-            document.getElementById('resultsArea').innerHTML = '<p class="placeholder-text">Query executed successfully. No rows returned.</p>';
-            document.getElementById('resultStatus').textContent = '✓ Success';
-            document.getElementById('resultStatus').className = 'result-status success';
-        } else {
-            document.getElementById('resultsArea').innerHTML = renderTable(results[0]);
-            document.getElementById('resultStatus').textContent = `✓ ${results[0].values.length} row(s)`;
-            document.getElementById('resultStatus').className = 'result-status success';
-
-            // Check if result matches expected
-            if (currentProblem) {
-                checkAnswer(results[0]);
-            }
+        const res = db.exec(sql);
+        if (res.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p class="success-msg">Query executed — no rows returned.</p></div>';
+            return;
         }
-    } catch (e) {
-        showError(e.message);
+
+        const columns = res[0].columns;
+        const values = res[0].values;
+
+        const table = document.createElement('table');
+        table.className = 'results-table';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        values.forEach(row => {
+            const tr = document.createElement('tr');
+            row.forEach(val => {
+                const td = document.createElement('td');
+                td.textContent = val === null ? 'null' : val;
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        container.appendChild(table);
+    } catch (err) {
+        container.innerHTML = `<div class="empty-state"><p class="error-msg">SQL Error: ${err.message}</p></div>`;
     }
 }
 
-// ===== Check Answer =====
-function checkAnswer(userResult) {
-    try {
-        const expectedResults = db.exec(currentProblem.solution);
-        if (expectedResults.length === 0) return;
+// ─── Navigation (Prev / Next) ───
+function navigatePrev() {
+    if (currentIndex > 0) selectProblem(allProblems[currentIndex - 1]);
+}
+function navigateNext() {
+    if (currentIndex < allProblems.length - 1) selectProblem(allProblems[currentIndex + 1]);
+}
 
-        const expected = expectedResults[0];
-        const isCorrect =
-            JSON.stringify(userResult.columns) === JSON.stringify(expected.columns) &&
-            JSON.stringify(userResult.values) === JSON.stringify(expected.values);
+// ─── Draggable Gutter ───
+function initGutter() {
+    const gutter = document.getElementById('gutter');
+    const left = document.getElementById('left-panel');
+    const right = document.getElementById('right-panel');
+    let isResizing = false;
 
-        if (isCorrect) {
-            document.getElementById('resultStatus').textContent = '🎉 Correct!';
-            document.getElementById('resultStatus').className = 'result-status success';
-            solved.add(currentProblem.id);
-            localStorage.setItem('sqlMasterySolved', JSON.stringify([...solved]));
-            renderSidebar();
+    gutter.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; });
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const containerWidth = document.querySelector('.workspace').offsetWidth;
+        const newLeftWidth = ((e.clientX - 8) / containerWidth) * 100;
+        if (newLeftWidth > 20 && newLeftWidth < 80) {
+            left.style.flex = `0 0 ${newLeftWidth}%`;
+            right.style.flex = `0 0 ${100 - newLeftWidth - 1}%`;
         }
-    } catch (e) {
-        // silently fail comparison
+    });
+    document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = ''; });
+}
+
+// ─── Code Editor Line Numbers & Sync ───
+function updateLineNumbers() {
+    const editor = document.getElementById('sql-editor');
+    const lineNumbers = document.getElementById('line-numbers');
+    const text = editor.value;
+    const lines = text.split('\n').length;
+
+    // Calculate current line based on cursor position
+    const cursorPos = editor.selectionStart;
+    const currentLine = text.substring(0, cursorPos).split('\n').length;
+
+    let html = '';
+    for (let i = 1; i <= lines; i++) {
+        const activeClass = i === currentLine ? 'active' : '';
+        html += `<div class="${activeClass}">${i}</div>`;
     }
+    lineNumbers.innerHTML = html;
 }
 
-// ===== Render Table =====
-function renderTable(result) {
-    let html = '<table class="result-table"><thead><tr>';
-    result.columns.forEach(col => {
-        html += `<th>${col}</th>`;
-    });
-    html += '</tr></thead><tbody>';
+function initEditorSync() {
+    const editor = document.getElementById('sql-editor');
+    const lineNumbers = document.getElementById('line-numbers');
 
-    result.values.forEach(row => {
-        html += '<tr>';
-        row.forEach(val => {
-            html += `<td>${val === null ? 'NULL' : val}</td>`;
-        });
-        html += '</tr>';
-    });
+    editor.addEventListener('input', updateLineNumbers);
+    editor.addEventListener('click', updateLineNumbers);
+    editor.addEventListener('keyup', updateLineNumbers);
 
-    html += '</tbody></table>';
-    return html;
-}
-
-// ===== Show Error =====
-function showError(message) {
-    document.getElementById('resultsArea').innerHTML = `<p class="error-text">❌ Error: ${message}</p>`;
-    document.getElementById('resultStatus').textContent = '✗ Error';
-    document.getElementById('resultStatus').className = 'result-status error';
-}
-
-// ===== Update Progress =====
-function updateProgress() {
-    const total = allProblems.length;
-    const solvedCount = solved.size;
-    const pct = (solvedCount / total * 100).toFixed(1);
-
-    document.getElementById('progressBar').style.width = `${pct}%`;
-    document.getElementById('progressText').textContent = `${solvedCount} / ${total} solved`;
-    document.getElementById('totalCount').textContent = total;
-}
-
-// ===== Search =====
-function setupSearch() {
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        document.querySelectorAll('.problem-item').forEach(item => {
-            const text = item.textContent.toLowerCase();
-            item.style.display = text.includes(query) ? '' : 'none';
-        });
-
-        // Show all categories when searching
-        if (query) {
-            document.querySelectorAll('.category-items').forEach(el => {
-                el.classList.remove('collapsed');
-            });
-            document.querySelectorAll('.category-header').forEach(el => {
-                el.classList.remove('collapsed');
-            });
-        }
+    // Sync scrolling
+    editor.addEventListener('scroll', () => {
+        lineNumbers.scrollTop = editor.scrollTop;
     });
 }
 
-// ===== Navigation =====
-function setupNavigation() {
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        if (!currentProblem) return;
-        const idx = allProblems.findIndex(p => p.id === currentProblem.id);
-        if (idx > 0) loadProblem(allProblems[idx - 1]);
-    });
+// ─── App Init ───
+document.addEventListener('DOMContentLoaded', async () => {
+    await initSQL();
+    renderProblemList();
+    initGutter();
+    initEditorSync();
+    updateLineNumbers();
 
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        if (!currentProblem) return;
-        const idx = allProblems.findIndex(p => p.id === currentProblem.id);
-        if (idx < allProblems.length - 1) loadProblem(allProblems[idx + 1]);
-    });
-}
+    // Tab clicks
+    document.getElementById('tab-description').onclick = () => showTab('description');
+    document.getElementById('tab-problems').onclick = () => showTab('problems');
+    document.getElementById('problem-list-btn').onclick = () => showTab('problems');
 
-// ===== Button Handlers =====
-function setupButtons() {
-    document.getElementById('runBtn').addEventListener('click', runQuery);
+    // Modal Close
+    document.getElementById('close-modal').onclick = () => {
+        document.getElementById('schema-modal').style.display = 'none';
+    };
+    window.onclick = (event) => {
+        const modal = document.getElementById('schema-modal');
+        if (event.target == modal) modal.style.display = 'none';
+    };
 
-    document.getElementById('hintBtn').addEventListener('click', () => {
-        if (!currentProblem) return;
-        const box = document.getElementById('hintBox');
-        if (box.style.display === 'none') {
-            box.textContent = `💡 ${currentProblem.hint}`;
-            box.style.display = 'block';
-        } else {
-            box.style.display = 'none';
-        }
-    });
+    // Run query
+    document.getElementById('run-btn').onclick = runQuery;
 
-    document.getElementById('solutionBtn').addEventListener('click', () => {
-        if (!currentProblem) return;
-        const box = document.getElementById('solutionBox');
-        if (box.style.display === 'none') {
-            box.textContent = currentProblem.solution;
-            box.style.display = 'block';
-        } else {
-            box.style.display = 'none';
-        }
-    });
+    // Navigation
+    document.getElementById('prev-btn').onclick = navigatePrev;
+    document.getElementById('next-btn').onclick = navigateNext;
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        document.getElementById('sqlEditor').value = '';
-        document.getElementById('resultsArea').innerHTML = '<p class="placeholder-text">Run your query to see results here</p>';
-        document.getElementById('resultStatus').textContent = '';
-        document.getElementById('resultStatus').className = 'result-status';
-        document.getElementById('hintBox').style.display = 'none';
-        document.getElementById('solutionBox').style.display = 'none';
-    });
-
-    // Ctrl+Enter to run
-    document.getElementById('sqlEditor').addEventListener('keydown', (e) => {
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             runQuery();
         }
-        // Tab key inserts spaces
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const editor = e.target;
-            const start = editor.selectionStart;
-            editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(editor.selectionEnd);
-            editor.selectionStart = editor.selectionEnd = start + 2;
-        }
-    });
-}
-
-// ===== Initialize App =====
-async function init() {
-    try {
-        await loadSqlJs();
-        await initDB();
-        renderSidebar();
-        setupSearch();
-        setupNavigation();
-        setupButtons();
-        setupStudyGuide();
-        console.log(`🚀 SQL Mastery loaded with ${allProblems.length} problems`);
-    } catch (e) {
-        console.error('Failed to initialize:', e);
-        document.getElementById('welcomeScreen').innerHTML = `
-      <div class="welcome-inner">
-        <h2>⚠️ Loading Error</h2>
-        <p>Failed to initialize SQLite. Please check your internet connection and refresh.</p>
-        <p style="color: var(--danger); font-family: var(--font-mono); font-size: 0.8rem;">${e.message}</p>
-      </div>
-    `;
-    }
-}
-
-// ===== Study Guide =====
-function openStudyGuide(categoryName) {
-    const notes = notesMap[categoryName];
-    if (!notes) return;
-
-    document.getElementById('studyGuideIcon').textContent = notes.icon;
-    document.getElementById('studyGuideTitle').textContent = `${notes.category} — Study Guide`;
-
-    // Render tabs
-    const tabsEl = document.getElementById('studyGuideTabs');
-    tabsEl.innerHTML = notes.sections.map((s, i) =>
-        `<button class="study-tab ${i === 0 ? 'active' : ''}" data-idx="${i}">${s.title.split(' ').slice(0, 3).join(' ')}</button>`
-    ).join('');
-
-    // Show first section
-    showStudySection(notes, 0);
-
-    // Tab click
-    tabsEl.querySelectorAll('.study-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabsEl.querySelectorAll('.study-tab').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            showStudySection(notes, parseInt(btn.dataset.idx));
-        });
     });
 
-    document.getElementById('studyGuideOverlay').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
+    // Auto-select first problem
+    if (allProblems.length > 0) selectProblem(allProblems[0]);
+});
 
-function showStudySection(notes, idx) {
-    const s = notes.sections[idx];
-    document.getElementById('studyGuideBody').innerHTML = `
-        <div class="study-section">
-            <h3 class="study-section-title">${s.title}</h3>
-            <div class="study-content">${s.content}</div>
-        </div>
-    `;
-}
-
-function escapeHtml(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function setupStudyGuide() {
-    document.getElementById('closeStudyGuide').addEventListener('click', () => {
-        document.getElementById('studyGuideOverlay').style.display = 'none';
-        document.body.style.overflow = '';
-    });
-    document.getElementById('studyGuideOverlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('studyGuideOverlay')) {
-            document.getElementById('studyGuideOverlay').style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    });
-}
-
-init();
+// Helper for showing modal
+window.showSchemaModal = function () {
+    if (!currentProblem) return;
+    const modal = document.getElementById('schema-modal');
+    const content = document.getElementById('modal-schema-content');
+    content.textContent = currentProblem.schema;
+    modal.style.display = 'flex';
+};
