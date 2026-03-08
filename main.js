@@ -808,3 +808,115 @@ window.showSchemaModal = function () {
     content.textContent = currentProblem.schema;
     modal.style.display = 'flex';
 };
+
+// ─── Webcam Overlay ───
+(function () {
+    const toggleBtn = document.getElementById('camera-toggle-btn');
+    const overlay = document.getElementById('webcam-overlay');
+    const video = document.getElementById('webcam-video');
+    const closeBtn = document.getElementById('webcam-close-btn');
+    const pipBtn = document.getElementById('webcam-pip-btn');
+    const sizeBtns = document.querySelectorAll('.webcam-size-btn');
+    const dragHandle = document.getElementById('webcam-drag-handle');
+
+    let stream = null;
+    let isOpen = false;
+
+    // Default size
+    overlay.classList.add('size-sm');
+
+    // ─── Open / Close ───
+    async function openCamera() {
+        if (!stream) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+            } catch (err) {
+                alert('Could not access camera: ' + err.message);
+                return;
+            }
+        }
+        overlay.classList.remove('hidden');
+        toggleBtn.classList.add('cam-active');
+        isOpen = true;
+    }
+
+    function closeCamera() {
+        overlay.classList.add('hidden');
+        toggleBtn.classList.remove('cam-active');
+        isOpen = false;
+    }
+
+    function stopStream() {
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+            video.srcObject = null;
+        }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        isOpen ? closeCamera() : openCamera();
+    });
+
+    closeBtn.addEventListener('click', () => {
+        closeCamera();
+        stopStream();
+    });
+
+    // ─── Size Controls ───
+    sizeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            sizeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            overlay.classList.remove('size-sm', 'size-md', 'size-lg');
+            overlay.classList.add('size-' + btn.dataset.size);
+        });
+    });
+
+    // ─── Picture-in-Picture ───
+    pipBtn.addEventListener('click', async () => {
+        if (!video.srcObject) return;
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await video.requestPictureInPicture();
+            }
+        } catch (err) {
+            console.warn('PiP not supported:', err);
+        }
+    });
+
+    // ─── Dragging ───
+    let dragging = false;
+    let startX, startY, startRight, startBottom;
+
+    dragHandle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = overlay.getBoundingClientRect();
+        startRight = window.innerWidth - rect.right;
+        startBottom = window.innerHeight - rect.bottom;
+        overlay.style.transition = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        overlay.style.right = Math.max(0, startRight - dx) + 'px';
+        overlay.style.bottom = Math.max(0, startBottom - dy) + 'px';
+        overlay.style.left = 'auto';
+        overlay.style.top = 'auto';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (dragging) {
+            dragging = false;
+            overlay.style.transition = '';
+        }
+    });
+})();

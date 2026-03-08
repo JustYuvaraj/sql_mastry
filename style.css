@@ -1124,3 +1124,149 @@ textarea#sql-editor::placeholder {
         padding: 0 12px;
     }
 }
+
+/* ─── WEBCAM OVERLAY ─── */
+.webcam-overlay {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+    cursor: default;
+    user-select: none;
+}
+
+.webcam-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85) translateY(20px);
+}
+
+/* Size Variants */
+.webcam-overlay.size-sm {
+    width: 220px;
+}
+
+.webcam-overlay.size-md {
+    width: 300px;
+}
+
+.webcam-overlay.size-lg {
+    width: 400px;
+}
+
+.webcam-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border);
+    cursor: grab;
+}
+
+.webcam-header:active {
+    cursor: grabbing;
+}
+
+.webcam-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--red-s);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.webcam-label svg {
+    fill: var(--red-s);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.webcam-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.webcam-ctrl-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, background 0.15s;
+}
+
+.webcam-ctrl-btn:hover {
+    color: var(--text-primary);
+    background: var(--border);
+}
+
+#webcam-video {
+    width: 100%;
+    display: block;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: #111;
+    transform: scaleX(-1);
+    /* mirror effect */
+}
+
+.webcam-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border-top: 1px solid var(--border);
+}
+
+.webcam-size-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.15s;
+}
+
+.webcam-size-btn:hover,
+.webcam-size-btn.active {
+    background: var(--border);
+    color: var(--text-primary);
+    border-color: var(--text-tertiary);
+}
+
+/* Camera button active state */
+#camera-toggle-btn.cam-active {
+    color: var(--red-s);
+    background: rgba(239, 71, 67, 0.12);
+    border-color: rgba(239, 71, 67, 0.3);
+}
