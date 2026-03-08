@@ -61,6 +61,69 @@ export const stringdate = [
         "description": "<p>Table: <code>Logins</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| user_id        | int      |\n| time_stamp     | datetime |\n+----------------+----------+\n(user_id, time_stamp) is the primary key (combination of columns with unique values) for this table.\nEach row contains information about the login time for the user with ID user_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the <strong>latest</strong> login for all users in the year <code>2020</code>. Do <strong>not</strong> include the users who did not login in <code>2020</code>.</p>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nLogins table:\n+---------+---------------------+\n| user_id | time_stamp          |\n+---------+---------------------+\n| 6       | 2020-06-30 15:06:07 |\n| 6       | 2021-04-21 14:06:06 |\n| 6       | 2019-03-07 00:18:15 |\n| 8       | 2020-02-01 05:10:53 |\n| 8       | 2020-12-30 00:46:50 |\n| 2       | 2020-01-16 02:49:50 |\n| 2       | 2019-08-25 07:59:08 |\n| 14      | 2019-07-14 09:00:00 |\n| 14      | 2021-01-06 11:59:59 |\n+---------+---------------------+\n<strong>Output:</strong> \n+---------+---------------------+\n| user_id | last_stamp          |\n+---------+---------------------+\n| 6       | 2020-06-30 15:06:07 |\n| 8       | 2020-12-30 00:46:50 |\n| 2       | 2020-01-16 02:49:50 |\n+---------+---------------------+\n<strong>Explanation:</strong> \nUser 6 logged into their account 3 times but only once in 2020, so we include this login in the result table.\nUser 8 logged into their account 2 times in 2020, once in February and once in December. We include only the latest one (December) in the result table.\nUser 2 logged into their account 2 times but only once in 2020, so we include this login in the result table.\nUser 14 did not login in 2020, so we do not include them in the result table.\n</pre>\n",
         "schema": "Create table If Not Exists Logins (user_id int, time_stamp datetime)\nTruncate table Logins\ninsert into Logins (user_id, time_stamp) values ('6', '2020-06-30 15:06:07')\ninsert into Logins (user_id, time_stamp) values ('6', '2021-04-21 14:06:06')\ninsert into Logins (user_id, time_stamp) values ('6', '2019-03-07 00:18:15')\ninsert into Logins (user_id, time_stamp) values ('8', '2020-02-01 05:10:53')\ninsert into Logins (user_id, time_stamp) values ('8', '2020-12-30 00:46:50')\ninsert into Logins (user_id, time_stamp) values ('2', '2020-01-16 02:49:50')\ninsert into Logins (user_id, time_stamp) values ('2', '2019-08-25 07:59:08')\ninsert into Logins (user_id, time_stamp) values ('14', '2019-07-14 09:00:00')\ninsert into Logins (user_id, time_stamp) values ('14', '2021-01-06 11:59:59')",
         "slug": "the-latest-login-in-2020",
+        "editorial": `[TOC]
+
+## Solution
+
+--- 
+
+### Overview
+
+The two conditions needed to get the final result are : 
+1. find all records in the year 2020 
+2. from these records, identify the latest record for each user
+
+For condition 1, there are two commonly used functions to get the year from a date:
+
+1. [YEAR(date)](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_year)
+2. [EXTRACT(unit from date)](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_extract): this function can extract different units (e.g. year, month, week) from a date
+
+For condition 2, there are two methods to get the latest record: 
+1. [MAX(expr)](https://dev.mysql.com/doc/refman/5.7/en/aggregate-functions.html#function_max): this function returns the maximum value of \`expr\`, and the MAX(time_stamp) returns the latest login time
+2. [FIRST_VALUE(expr)](https://dev.mysql.com/doc/refman/8.0/en/window-function-descriptions.html#function_first-value): this window function returns the value of \`expr\` from the first row of the window frame; if the column \`time_stamp\` is sorted in descending order,  the FIRST_VALUE(time_stamp) also returns the latest login time
+
+---
+
+### Approach 1: Using YEAR() to extract year from the date column and MAX() to find the latest record 
+
+#### Algorithm
+1. Select the columns needed for the final output
+2. Add condition 1 using YEAR() to select all records with a timestamp in the year 2020 
+3. Add condition 2 using MAX() to get the latest record for each user from the previous step
+4. Group the result by user_id to get the distinct record for each user_id 
+
+##### MySQL
+
+\`\`\`sql
+SELECT 
+    user_id, 
+    MAX(time_stamp) AS last_stamp
+FROM 
+    Logins
+WHERE 
+    YEAR(time_stamp) = 2020
+GROUP BY 1;
+\`\`\`
+---
+
+### Approach 2: Using EXTRACT() to get year from the date column and FIRST_VALUE() to find the latest record 
+
+#### Algorithm
+1. Select the columns needed for the final output
+2. Add condition 1 using EXTRACT() to select all records with a timestamp in the year 2020 
+3. Add condition 2 using FIRST_VALUE() to get the latest record for each user from the previous step; the date column is sorted in descending order to make sure the first record is the latest record in 2020
+4. Because window function returns non-aggregate results,  DISTINCT is needed for this approach to make sure users with multiple records in 2020 will return only one record
+
+\`\`\`sql
+SELECT
+    DISTINCT user_id,
+    FIRST_VALUE(time_stamp)OVER(PARTITION BY user_id ORDER BY time_stamp DESC) AS last_stamp
+FROM
+    Logins
+WHERE EXTRACT(Year FROM time_stamp) = 2020;
+\`\`\`
+
+---`,
         "originalCategory": "string-date"
     },
     {
@@ -76,7 +139,7 @@ export const stringdate = [
         "id": "1440",
         "title": "Evaluate Boolean Expression",
         "difficulty": "medium",
-        "description": null,
+        "description": "<p>Table: <code>Variables</code></p>\\n\\n<pre>\\n+------------+------------+\\n| name       | value      |\\n+------------+------------+\\n| varchar(3) | int        |\\n+------------+------------+\\n</pre>\\n\\n<p>Table: <code>Expressions</code></p>\\n\\n<pre>\\n+--------------+------------+---------------+\\n| left_operand | operator   | right_operand |\\n+--------------+------------+---------------+\\n| varchar(3)   | ENUM('>'   | varchar(3)    |\\n+--------------+------------+---------------+\\n</pre>\\n\\n<p>&nbsp;</p>\\n\\n<p>Write a solution to evaluate the boolean expressions in the <code>Expressions</code> table. Return the result table in <strong>any order</strong>.</p>\\n\\n<p>The result format is in the following example.</p>\\n\\n<p>&nbsp;</p>\\n<p><strong class=\\\"example\\\">Example 1:</strong></p>\\n\\n<pre>\\n<strong>Input:</strong> \\nVariables table:\\n+------+-------+\\n| name | value |\\n+------+-------+\\n| x    | 66    |\\n| y    | 77    |\\n+------+-------+\\nExpressions table:\\n+--------------+----------+---------------+\\n| left_operand | operator | right_operand |\\n+--------------+----------+---------------+\\n| x            | >        | y             |\\n| x            | <        | y             |\\n| x            | =        | y             |\\n| y            | >        | x             |\\n| y            | <        | x             |\\n| x            | =        | x             |\\n+--------------+----------+---------------+\\n<strong>Output:</strong> \\n+--------------+----------+---------------+-------+\\n| left_operand | operator | right_operand | value |\\n+--------------+----------+---------------+-------+\\n| x            | >        | y             | false |\\n| x            | <        | y             | true  |\\n| x            | =        | y             | true  |\\n| y            | >        | x             | true  |\\n+--------------+----------+---------------+-------+\\n</pre>\\n",
         "schema": "Create Table If Not Exists Variables (name varchar(3), value int)\nCreate Table If Not Exists Expressions (left_operand varchar(3), operator ENUM('>', '<', '='), right_operand varchar(3))\nTruncate table Variables\ninsert into Variables (name, value) values ('x', '66')\ninsert into Variables (name, value) values ('y', '77')\nTruncate table Expressions\ninsert into Expressions (left_operand, operator, right_operand) values ('x', '>', 'y')\ninsert into Expressions (left_operand, operator, right_operand) values ('x', '<', 'y')\ninsert into Expressions (left_operand, operator, right_operand) values ('x', '=', 'y')\ninsert into Expressions (left_operand, operator, right_operand) values ('y', '>', 'x')\ninsert into Expressions (left_operand, operator, right_operand) values ('y', '<', 'x')\ninsert into Expressions (left_operand, operator, right_operand) values ('x', '=', 'x')",
         "slug": "evaluate-boolean-expression",
         "originalCategory": "string-date"

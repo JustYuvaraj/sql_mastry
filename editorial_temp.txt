@@ -1,0 +1,1 @@
+```\n# Write your MySQL query statement below\n\nselect distinct author_id as id from Views\nwhere author_id = viewer_id \norder by id;\n```\n\n![image](https://assets.leetcode.com/users/images/39451a8b-4887-46f6-9b8f-b994e2e40253_1687453528.6643982.jpeg)\n\n**please upvote!! if you like.**\ncomment below\uD83D\uDC47

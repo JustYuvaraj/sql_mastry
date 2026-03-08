@@ -3,23 +3,23 @@
    ============================================ */
 
 :root {
-    --bg-layer-1: #f0f0f0;
-    --bg-layer-2: #ffffff;
-    --bg-code: #ffffff;
-    --border: #e5e5e5;
-    --border-light: #f0f0f0;
+    --bg-layer-1: #1a1a1a;
+    --bg-layer-2: #282828;
+    --bg-code: #333333;
+    --border: #3e3e3e;
+    --border-light: #424242;
 
-    --text-primary: #262626;
-    --text-secondary: #3c3c43;
-    --text-tertiary: #8a8a8e;
-    --text-placeholder: #bfbfbf;
+    --text-primary: #eff1f6;
+    --text-secondary: #bfbfbf;
+    --text-tertiary: #8c8c8c;
+    --text-placeholder: #595959;
 
-    --green-s: #00af9b;
-    --yellow-s: #ffb800;
-    --red-s: #ff375f;
+    --green-s: #2cbb5d;
+    --yellow-s: #ffa116;
+    --red-s: #ef4743;
     --orange: #ffa116;
     --blue-s: #007aff;
-    --run-bg: #f0f0f0;
+    --run-bg: #3e3e3e;
     --submit-green: #2cbb5d;
 }
 
@@ -130,7 +130,7 @@ body {
 }
 
 .run-btn:hover {
-    background: #e5e5e5;
+    background: var(--border);
 }
 
 .submit-btn {
@@ -320,7 +320,7 @@ body {
 .description-body pre {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    background: #f7f8fa;
+    background: var(--bg-layer-2);
     border-radius: 6px;
     padding: 14px 16px;
     margin: 12px 0;
@@ -333,7 +333,7 @@ body {
 .description-body code {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    background: #f7f8fa;
+    background: rgba(0, 0, 0, 0.4);
     padding: 2px 6px;
     border-radius: 4px;
 }
@@ -373,7 +373,7 @@ body {
 }
 
 .description-body table th {
-    background: #f7f8fa;
+    background: var(--bg-layer-2);
     font-weight: 600;
 }
 
@@ -419,17 +419,17 @@ body {
 }
 
 .problem-item:hover {
-    background: #f7f7f8;
+    background: var(--border-light);
 }
 
 .problem-item.active {
-    background: #f0f7ff;
+    background: var(--border);
 }
 
 .problem-item-check {
     width: 16px;
     height: 16px;
-    border: 2px solid #d9d9d9;
+    border: 2px solid var(--border);
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -477,7 +477,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #f0f0f0;
+    background: var(--bg-layer-1);
     padding: 4px 10px;
     border-radius: 5px;
     font-size: 13px;
@@ -579,7 +579,7 @@ textarea#sql-editor {
 }
 
 textarea#sql-editor::placeholder {
-    color: #008000;
+    color: var(--green-s);
     /* LeetCode Green for initial comment */
     opacity: 1;
 }
@@ -598,7 +598,7 @@ textarea#sql-editor::placeholder {
 }
 
 .sql-schema-link:hover {
-    color: #3754b3;
+    color: var(--blue-s);
 }
 
 /* Modal Styles */
@@ -616,7 +616,7 @@ textarea#sql-editor::placeholder {
 }
 
 .modal-content {
-    background: #ffffff;
+    background: var(--bg-layer-2);
     width: 90%;
     max-width: 600px;
     border-radius: 12px;
@@ -652,7 +652,7 @@ textarea#sql-editor::placeholder {
 }
 
 .modal-body pre {
-    background: #f7f8fa;
+    background: var(--bg-layer-1);
     padding: 15px;
     border-radius: 8px;
     font-family: 'JetBrains Mono', monospace;
@@ -704,7 +704,7 @@ textarea#sql-editor::placeholder {
     flex: 1;
     overflow: auto;
     padding: 12px 16px;
-    background: #fff;
+    background: var(--bg-layer-2);
 }
 
 /* ─── RESULTS TABLE ─── */
@@ -730,9 +730,6 @@ textarea#sql-editor::placeholder {
     color: var(--text-primary);
 }
 
-.results-table tr:hover td {
-    background: #fafafa;
-}
 
 /* ─── UTILITIES ─── */
 .empty-state {
@@ -777,4 +774,353 @@ textarea#sql-editor::placeholder {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.15);
+}
+
+/* ─── MODAL ─── */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--bg-layer-2);
+    width: 90%;
+    max-width: 650px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.modal-close {
+    cursor: pointer;
+    color: var(--text-tertiary);
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#modal-schema-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+/* ─── EDITORIAL VIEW ─── */
+#editorial-view {
+    padding: 16px 20px;
+    overflow-y: auto;
+    color: var(--text-primary);
+}
+
+.editorial-header {
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-quaternary);
+}
+
+.editorial-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.editorial-body {
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.editorial-body h2 {
+    margin: 32px 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.editorial-body h3 {
+    margin: 24px 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.editorial-body hr {
+    border: 0;
+    border-top: 1px solid var(--border-light);
+    margin: 24px 0;
+}
+
+.editorial-body blockquote {
+    border-left: 4px solid var(--border-light);
+    padding-left: 16px;
+    margin: 16px 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.editorial-body strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.editorial-body pre {
+    background: var(--bg-layer-2);
+    padding: 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    overflow-x: auto;
+    border: 1px solid var(--border-light);
+}
+
+.editorial-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+}
+
+.editorial-body p {
+    margin-bottom: 12px;
+}
+
+.editorial-body ul {
+    margin-bottom: 16px;
+    padding-left: 20px;
+}
+
+.editorial-body li {
+    margin-bottom: 8px;
+}
+
+.panel-content[style*="display: none"] {
+    display: none !important;
+}
+
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* ─── TESTCASE SELECTOR ─── */
+.testcase-selector {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-layer-1);
+}
+
+.case-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--bg-layer-1);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.case-btn.active {
+    background: var(--bg-layer-2);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.case-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 16px;
+}
+
+#testcase-details {
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.expected-output {
+    background: var(--bg-layer-1);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-top: 8px;
+    border: 1px solid var(--border-light);
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ─── RESULTS TABLE ─── */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.results-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg-layer-1);
+    border: 1px solid var(--border);
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.results-table td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+/* ─── DESCRIPTION TABLES ─── */
+.description-body table,
+.example-data-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+}
+
+.description-body th,
+.description-body td,
+.example-data-section th,
+.example-data-section td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.description-body th,
+.example-data-section th,
+.description-body table>tbody:first-child>tr:first-child td,
+.example-data-section table>tbody:first-child>tr:first-child td {
+    background: var(--bg-layer-1);
+    font-weight: 600;
+    color: var(--text-tertiary);
+}
+
+.description-body td,
+.example-data-section td {
+    color: var(--text-primary);
+}
+
+.description-body td p,
+.description-body th p,
+.example-data-section td p,
+.example-data-section th p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.description-body code,
+.example-data-section code {
+    background: var(--bg-layer-2);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+/* ─── MOBILE RESPONSIVENESS ─── */
+@media (max-width: 768px) {
+    .workspace {
+        flex-direction: column;
+        padding: 5px;
+        overflow-y: auto;
+    }
+
+    .gutter {
+        display: none;
+    }
+
+    .left-panel,
+    .right-panel {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        min-height: 400px;
+        margin-bottom: 10px;
+    }
+
+    .panel-content {
+        padding: 16px 20px;
+    }
+
+    .problem-number-title {
+        font-size: 20px;
+    }
+
+    .results-section {
+        max-height: none;
+        min-height: 250px;
+    }
+
+    .nav-left,
+    .nav-center,
+    .nav-right {
+        gap: 8px;
+    }
+
+    .nav-logo {
+        margin-right: 0;
+    }
+
+    .nav-btn span,
+    .auto-text,
+    .nav-text-muted {
+        display: none;
+    }
+
+    .nav-btn {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-nav {
+        padding: 0 10px;
+    }
+
+    .nav-arrows {
+        display: none;
+    }
+
+    .run-btn,
+    .submit-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .panel-tabs .tab {
+        padding: 0 12px;
+    }
 }

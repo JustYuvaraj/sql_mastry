@@ -34,6 +34,185 @@ export const subqueries = [
         "description": "<p>Table: <code>RequestAccepted</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| requester_id   | int     |\n| accepter_id    | int     |\n| accept_date    | date    |\n+----------------+---------+\n(requester_id, accepter_id) is the primary key (combination of columns with unique values) for this table.\nThis table contains the ID of the user who sent the request, the ID of the user who received the request, and the date when the request was accepted.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the people who have the most friends and the most friends number.</p>\n\n<p>The test cases are generated so that only one person has the most friends.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nRequestAccepted table:\n+--------------+-------------+-------------+\n| requester_id | accepter_id | accept_date |\n+--------------+-------------+-------------+\n| 1            | 2           | 2016/06/03  |\n| 1            | 3           | 2016/06/08  |\n| 2            | 3           | 2016/06/08  |\n| 3            | 4           | 2016/06/09  |\n+--------------+-------------+-------------+\n<strong>Output:</strong> \n+----+-----+\n| id | num |\n+----+-----+\n| 3  | 3   |\n+----+-----+\n<strong>Explanation:</strong> \nThe person with id 3 is a friend of people 1, 2, and 4, so he has three friends in total, which is the most number than any others.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> In the real world, multiple people could have the same most number of friends. Could you find all these people in this case?</p>\n",
         "schema": "Create table If Not Exists RequestAccepted (requester_id int not null, accepter_id int null, accept_date date null)\nTruncate table RequestAccepted\ninsert into RequestAccepted (requester_id, accepter_id, accept_date) values ('1', '2', '2016/06/03')\ninsert into RequestAccepted (requester_id, accepter_id, accept_date) values ('1', '3', '2016/06/08')\ninsert into RequestAccepted (requester_id, accepter_id, accept_date) values ('2', '3', '2016/06/08')\ninsert into RequestAccepted (requester_id, accepter_id, accept_date) values ('3', '4', '2016/06/09')",
         "slug": "friend-requests-ii-who-has-the-most-friends",
+        "editorial": `​
+<!-- Don't delete this -->
+[TOC]
+​
+# Solution
+​
+---
+​
+## pandas
+
+<!-- h3 for approaches -->
+### Approach: Combining DataFrames Using concat() and Finding the Top Values Using sort_values() and head()
+
+
+<!-- h4 for sections -->
+#### Algorithm
+
+<!-- Describe your approach to solving the problem. -->
+Since one person can acquire a friend by either requesting or accepting a friend request, to get how many friends each person has, we can count how many times their id appeared in either the column \`requester_id\` or the column \`accepter_id\`. It's generally a good idea to combine the two columns into one for easier calculation. 
+
+Let's start by combining the two columns. We can leverage the function \`concat()\` to combine DataFrames just like using \`UNION/UNION ALL\` in MySQL, or, in this case, combine only the columns. We add the function \`to_frame()\` to convert the result from a Series to a DataFrame. For later calculation, we also renamed the newly created column as \`id\`.
+
+\`\`\`python
+values = pd.concat([request_accepted["requester_id"], request_accepted["accepter_id"]]).to_frame('id')
+\`\`\`
+
+We now have the two columns \`requester_id\` and \`accepter_id\` combined into one. 
+
+| id |
+| -- |
+| 1  |
+| 1  |
+| 2  |
+| 3  |
+| 2  |
+| 3  |
+| 3  |
+| 4  |
+
+Now we only need to count how many times each \`id\` appeared in the list and identify the \`id\` with the maximum count. To do this, we can apply \`count()\` to \`id\` and group the result at the \`id\` level. We can leverage the function \`agg()\` to get the aggregate value and rename the result at the same time. To look for the maximum count, we sort the list by the count (the newly created column \`num\`) in descending order using the function \`sort_values()\` and passing the parameter \`ascending=False\` to the function. The \`id\` that has the most friends is now listed at the top, and we can select this record using the function \`head()\`.  
+
+\`\`\`python
+df = values.groupby('id', as_index=False).agg(num=('id', 'count')).sort_values('num', ascending=False).head(1)
+\`\`\`
+
+<!-- h4 for sections -->
+#### Implementation
+​<iframe src="https://leetcode.com/playground/mLCXWMTb/shared" frameBorder="0" width="100%" height="191" name="mLCXWMTb"></iframe>
+<!-- an empty line to separate approaches -->
+
+----
+​
+​
+## Database
+
+
+<!-- h3 for approaches -->
+### Approach 1: Combining Tables Using UNION ALL and Finding the Top Values Using ORDER BY + LIMIT
+
+<!-- h4 for sections -->
+#### Algorithm
+
+<!-- Describe your approach to solving the problem. -->
+
+Since one person can acquire a friend by either requesting or accepting a friend request, to get how many friends each person has, we can count how many times their id appeared in either the column \`requester_id\` or the column \`accepter_id\`. It's generally a good idea to combine the two columns into one for easier calculation. 
+
+Let's start by combining the two columns. For this problem, it's important to use \`UNION ALL\` so all duplicate values are kept. Both columns are renamed as \`id\`, and we can put this step in a CTE for later usage. 
+
+\`\`\`sql
+WITH all_ids AS (
+   SELECT requester_id AS id 
+   FROM RequestAccepted
+   UNION ALL
+   SELECT accepter_id AS id
+   FROM RequestAccepted)
+\`\`\`
+
+Next, we can count how many times each \`id\` appeared in the list and identify the \`id\` with the maximum count. To do this, we can group the aggregate value \`COUNT(id)\` at the \`id\` level. To retain only the \`id\` that has the maximum counts, we can sort the result by the \`COUNT(id)\` in descending order and take only the first record using \`LIMIT\`. Last but not least, we rename the aggregate count to \`num\` for the final output. All of these steps can be achieved in the main query without creating any subqueries. 
+
+
+\`\`\`sql
+SELECT id, 
+   COUNT(id) AS num
+FROM all_ids
+GROUP BY id
+ORDER BY COUNT(id) DESC
+LIMIT 1
+\`\`\`
+
+<!-- h4 for sections -->
+#### Implementation
+
+\`\`\`mysql []
+WITH all_ids AS (
+   SELECT requester_id AS id 
+   FROM RequestAccepted
+   UNION ALL
+   SELECT accepter_id AS id
+   FROM RequestAccepted)
+SELECT id, 
+   COUNT(id) AS num
+FROM all_ids
+GROUP BY id
+ORDER BY COUNT(id) DESC
+LIMIT 1
+\`\`\`
+​
+<!-- an empty line to separate approaches -->
+
+
+### Approach 2: Combining Tables Using UNION ALL and Finding Top Values Using RANK()
+
+<!-- h4 for sections -->
+#### Algorithm
+
+<!-- Describe your approach to solving the problem. -->
+The main difference between this approach and the first one is that this approach can include multiple \`id\`s if there is more than one person who has the most number of friends. Also, it's never a bad idea to use the window function.  
+
+Similarly, we can start by combining the two columns into one. For this problem, it's important to use \`UNION ALL\` so all duplicate values are kept. Both columns are renamed as \`id\`, and we can put this step in a CTE for later usage. 
+
+
+\`\`\`sql
+WITH all_ids AS (
+   SELECT requester_id AS id 
+   FROM RequestAccepted
+   UNION ALL
+   SELECT accepter_id AS id
+   FROM RequestAccepted)
+\`\`\`
+
+In the subquery, we can count how many times each \`id\` appeared in the list using \`COUNT()\` and \`GROUP\` the result at the \`id\` level. The calculated result is renamed to \`num\` as requested by the final output. Additionally, we can append a rank to the records per the aggregate count in descending order. 
+
+\`\`\`sql
+   (
+   SELECT id, 
+      COUNT(id) AS num, 
+      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk
+   FROM all_ids
+   GROUP BY id
+   )t0
+\`\`\`
+
+Now we can select the top record, which is the \`id\` that has the maximum count (number of friends), in the main query. 
+
+\`\`\`sql
+SELECT id, num
+FROM 
+   (
+   SELECT id, 
+      COUNT(id) AS num, 
+      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk
+   FROM all_ids
+   GROUP BY id
+   )t0
+WHERE rnk=1
+\`\`\`
+
+<!-- h4 for sections -->
+#### Implementation
+
+\`\`\`mysql []
+WITH all_ids AS (
+   SELECT requester_id AS id 
+   FROM RequestAccepted
+   UNION ALL
+   SELECT accepter_id AS id
+   FROM RequestAccepted)
+SELECT id, num
+FROM 
+   (
+   SELECT id, 
+      COUNT(id) AS num, 
+      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk
+   FROM all_ids
+   GROUP BY id
+   )t0
+WHERE rnk=1
+\`\`\`
+----`,
         "originalCategory": "subqueries"
     },
     {
@@ -76,7 +255,7 @@ export const subqueries = [
         "id": "1398",
         "title": "Customers Who Bought Products A and B but Not C",
         "difficulty": "medium",
-        "description": null,
+        "description": "<p>Table: <code>Customers</code></p>\\n\\n<pre>\\n+-------------+---------------+\\n| customer_id | customer_name |\\n+-------------+---------------+\\n| int         | varchar(30)   |\\n+-------------+---------------+\\n</pre>\\n\\n<p>Table: <code>Orders</code></p>\\n\\n<pre>\\n+------------+-------------+--------------+\\n| order_id   | customer_id | product_name |\\n+------------+-------------+--------------+\\n| int        | int         | varchar(30)  |\\n+------------+-------------+--------------+\\n</pre>\\n\\n<p>&nbsp;</p>\\n\\n<p>Write a solution to report the customer_id and customer_name of customers who bought products <strong>\"A\"</strong> and <strong>\"B\"</strong> but did not buy the product <strong>\"C\"</strong>. Return the result table ordered by <code>customer_id</code>.</p>\\n\\n<p>The result format is in the following example.</p>\\n\\n<p>&nbsp;</p>\\n<p><strong class=\\\"example\\\">Example 1:</strong></p>\\n\\n<pre>\\n<strong>Input:</strong> \\nCustomers table:\\n+-------------+---------------+\\n| customer_id | customer_name |\\n+-------------+---------------+\\n| 1           | Daniel        |\\n| 2           | Diana         |\\n| 3           | Elizabeth     |\\n| 4           | Jhon          |\\n+-------------+---------------+\\nOrders table:\\n+----------+-------------+--------------+\\n| order_id | customer_id | product_name |\\n+----------+-------------+--------------+\\n| 10       | 1           | A            |\\n| 20       | 1           | B            |\\n| 30       | 1           | D            |\\n| 40       | 1           | C            |\\n| 50       | 2           | A            |\\n| 60       | 3           | A            |\\n| 70       | 3           | B            |\\n| 80       | 3           | D            |\\n| 90       | 4           | C            |\\n+----------+-------------+--------------+\\n<strong>Output:</strong> \\n+-------------+---------------+\\n| customer_id | customer_name |\\n+-------------+---------------+\\n| 3           | Elizabeth     |\\n+-------------+---------------+\\n<strong>Explanation:</strong> \\nCustomer 1 bought A, B, and C so excluded. Customer 2 only bought A. Customer 3 bought A and B but not C. Customer 4 only bought C.\\n</pre>\\n",
         "schema": "Create table If Not Exists Customers (customer_id int, customer_name varchar(30))\nCreate table If Not Exists Orders (order_id int, customer_id int, product_name varchar(30))\nTruncate table Customers\ninsert into Customers (customer_id, customer_name) values ('1', 'Daniel')\ninsert into Customers (customer_id, customer_name) values ('2', 'Diana')\ninsert into Customers (customer_id, customer_name) values ('3', 'Elizabeth')\ninsert into Customers (customer_id, customer_name) values ('4', 'Jhon')\nTruncate table Orders\ninsert into Orders (order_id, customer_id, product_name) values ('10', '1', 'A')\ninsert into Orders (order_id, customer_id, product_name) values ('20', '1', 'B')\ninsert into Orders (order_id, customer_id, product_name) values ('30', '1', 'D')\ninsert into Orders (order_id, customer_id, product_name) values ('40', '1', 'C')\ninsert into Orders (order_id, customer_id, product_name) values ('50', '2', 'A')\ninsert into Orders (order_id, customer_id, product_name) values ('60', '3', 'A')\ninsert into Orders (order_id, customer_id, product_name) values ('70', '3', 'B')\ninsert into Orders (order_id, customer_id, product_name) values ('80', '3', 'D')\ninsert into Orders (order_id, customer_id, product_name) values ('90', '4', 'C')",
         "slug": "customers-who-bought-products-a-and-b-but-not-c",
         "originalCategory": "subqueries"
@@ -88,6 +267,269 @@ export const subqueries = [
         "description": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| id           | int     |\n| name         | varchar |\n| salary       | int     |\n| departmentId | int     |\n+--------------+---------+\nid is the primary key (column with unique values) for this table.\ndepartmentId is a foreign key (reference column) of the ID from the <code>Department </code>table.\nEach row of this table indicates the ID, name, and salary of an employee. It also contains the ID of their department.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Department</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| name        | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table indicates the ID of a department and its name.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A company&#39;s executives are interested in seeing who earns the most money in each of the company&#39;s departments. A <strong>high earner</strong> in a department is an employee who has a salary in the <strong>top three unique</strong> salaries for that department.</p>\n\n<p>Write a solution to find the employees who are <strong>high earners</strong> in each of the departments.</p>\n\n<p>Return the result table <strong>in any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+-------+--------+--------------+\n| id | name  | salary | departmentId |\n+----+-------+--------+--------------+\n| 1  | Joe   | 85000  | 1            |\n| 2  | Henry | 80000  | 2            |\n| 3  | Sam   | 60000  | 2            |\n| 4  | Max   | 90000  | 1            |\n| 5  | Janet | 69000  | 1            |\n| 6  | Randy | 85000  | 1            |\n| 7  | Will  | 70000  | 1            |\n+----+-------+--------+--------------+\nDepartment table:\n+----+-------+\n| id | name  |\n+----+-------+\n| 1  | IT    |\n| 2  | Sales |\n+----+-------+\n<strong>Output:</strong> \n+------------+----------+--------+\n| Department | Employee | Salary |\n+------------+----------+--------+\n| IT         | Max      | 90000  |\n| IT         | Joe      | 85000  |\n| IT         | Randy    | 85000  |\n| IT         | Will     | 70000  |\n| Sales      | Henry    | 80000  |\n| Sales      | Sam      | 60000  |\n+------------+----------+--------+\n<strong>Explanation:</strong> \nIn the IT department:\n- Max earns the highest unique salary\n- Both Randy and Joe earn the second-highest unique salary\n- Will earns the third-highest unique salary\n\nIn the Sales department:\n- Henry earns the highest salary\n- Sam earns the second-highest salary\n- There is no third-highest salary as there are only two employees\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>There are no employees with the <strong>exact</strong> same name, salary <em>and</em> department.</li>\n</ul>\n",
         "schema": "Create table If Not Exists Employee (id int, name varchar(255), salary int, departmentId int)\nCreate table If Not Exists Department (id int, name varchar(255))\nTruncate table Employee\ninsert into Employee (id, name, salary, departmentId) values ('1', 'Joe', '85000', '1')\ninsert into Employee (id, name, salary, departmentId) values ('2', 'Henry', '80000', '2')\ninsert into Employee (id, name, salary, departmentId) values ('3', 'Sam', '60000', '2')\ninsert into Employee (id, name, salary, departmentId) values ('4', 'Max', '90000', '1')\ninsert into Employee (id, name, salary, departmentId) values ('5', 'Janet', '69000', '1')\ninsert into Employee (id, name, salary, departmentId) values ('6', 'Randy', '85000', '1')\ninsert into Employee (id, name, salary, departmentId) values ('7', 'Will', '70000', '1')\nTruncate table Department\ninsert into Department (id, name) values ('1', 'IT')\ninsert into Department (id, name) values ('2', 'Sales')",
         "slug": "department-top-three-salaries",
+        "editorial": `​
+<!-- Don't delete this -->
+[TOC]
+​
+# Solution
+​
+---
+​
+## pandas
+
+<!-- h3 for approaches -->
+### Approach 1: Return the First n Rows Using nlargest()
+
+<!-- h4 for sections -->
+#### Algorithm
+
+<!-- Describe your approach to solving the problem. -->
+For this problem, we can either identify the top earners first using DataFrame \`employee\` and then join the DataFrame \`department\` to get the department name, or join the DataFrame \`department\` first to get the department name before identifying the top earners. In this approach, we use the latter logic. 
+
+In this step, we can also update the column name in the DataFrame \`department\` from \`name\` to \`Department\` as requested by the final output.
+
+\`\`\`python
+Employee_Department = employee.merge(department, left_on='departmentId', right_on='id').rename(columns = {'name_y': 'Department'})
+\`\`\`
+
+Now we have the employee and department information stored in the same DataFrame: 
+
+| id_x | name_x | salary | departmentId | id_y | Department |
+| ---- | ------ | ------ | ------------ | ---- | ---------- |
+| 1    | Joe    | 85000  | 1            | 1    | IT         |
+| 4    | Max    | 90000  | 1            | 1    | IT         |
+| 5    | Janet  | 69000  | 1            | 1    | IT         |
+| 6    | Randy  | 85000  | 1            | 1    | IT         |
+| 7    | Will   | 70000  | 1            | 1    | IT         |
+| 2    | Henry  | 80000  | 2            | 2    | Sales      |
+| 3    | Sam    | 60000  | 2            | 2    | Sales      |
+
+Since the definition of a **high earner** is an employee who has a salary in the top three **unique** salaries for the department, we want to make sure the salary is unique at the department level for later calculation. To do this, we select only the department and salary from the DataFrame created in the last step and drop any duplicated records if existed. 
+
+\`\`\`python
+Employee_Department = Employee_Department[['Department', 'departmentId', 'salary']].drop_duplicates()
+\`\`\`
+
+Here's the output after this step:
+
+| Department | departmentId | salary |
+| ---------- | ------------ | ------ |
+| IT         | 1            | 85000  |
+| IT         | 1            | 90000  |
+| IT         | 1            | 69000  |
+| IT         | 1            | 70000  |
+| Sales      | 2            | 80000  |
+| Sales      | 2            | 60000  |
+
+Now we can identify the top 3 unique salaries for each department. We use the function [\`nlargest()\`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.nlargest.html) to get this value. The parameter '3' is passed to the function as it defines the number of rows to return. 
+
+\`\`\`python
+top_salary = Employee_Department.groupby(['Department', 'departmentId']).salary.nlargest(3).reset_index()
+\`\`\`
+
+| Department | departmentId | level_2 | salary |
+| ---------- | ------------ | ------- | ------ |
+| IT         | 1            | 1       | 90000  |
+| IT         | 1            | 0       | 85000  |
+| IT         | 1            | 4       | 70000  |
+| Sales      | 2            | 5       | 80000  |
+| Sales      | 2            | 6       | 60000  |
+
+
+Now we only need to identify the employees are in these departments and making the same amount of salary. To do this, we can merge the DataFrame \`top_salary\`, which contains the top three unique salary for each department, to the DataFrame \`employee\` on \`departmentId\` and \`salary\`, so only the employees that match both criteria will be retained. 
+
+\`\`\`python
+df = top_salary.merge(employee, on=['departmentId', 'salary'])
+\`\`\`
+
+| Department | departmentId | level_2 | salary | id | name  |
+| ---------- | ------------ | ------- | ------ | -- | ----- |
+| IT         | 1            | 1       | 90000  | 4  | Max   |
+| IT         | 1            | 0       | 85000  | 1  | Joe   |
+| IT         | 1            | 0       | 85000  | 6  | Randy |
+| IT         | 1            | 4       | 70000  | 7  | Will  |
+| Sales      | 2            | 5       | 80000  | 2  | Henry |
+| Sales      | 2            | 6       | 60000  | 3  | Sam   |
+
+Lastly, we clean the DataFrame as per requested by the final output. We keep only the columns needed and rename the columns accordingly.
+
+\`\`\`python
+df[['Department', 'name', 'salary']].rename(columns = {'name': 'Employee', 'salary': 'Salary'})
+\`\`\`
+
+<!-- h4 for sections -->
+#### Implementation
+​<iframe src="https://leetcode.com/playground/5nLUgFZZ/shared" frameBorder="0" width="100%" height="276" name="5nLUgFZZ"></iframe>
+<!-- an empty line to separate approaches -->
+
+
+<!-- h3 for approaches -->
+### Approach 2: Return the First n Rows Using rank()
+
+<!-- h4 for sections -->
+#### Algorithm
+
+<!-- Describe your approach to solving the problem. -->
+For this approach, we first identify the top earners from the DataFrame \`employee\` and then join the DataFrame \`department\` to get the department name. 
+
+To identify the high earners for each department, we use the function [\`rank()\`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.rank.html) to apply dense rank on the column \`salary\` so we can get the top three **unique** salaries. The parameter \`ascending=False\` is passed so the salary is sorted from the maximum to the minimum. Within the same step, we can also add the filter to keep only the records with a rank smaller than or equal to 3. 
+
+\`\`\`python
+top_salary = employee[employee.groupby('departmentId').salary.rank(method='dense', ascending=False) <= 3]
+\`\`\`
+
+Only employees who are \`high earners\` retained in the new DataFrame:
+
+| id | name  | salary | departmentId |
+| -- | ----- | ------ | ------------ |
+| 1  | Joe   | 85000  | 1            |
+| 2  | Henry | 80000  | 2            |
+| 3  | Sam   | 60000  | 2            |
+| 4  | Max   | 90000  | 1            |
+| 6  | Randy | 85000  | 1            |
+| 7  | Will  | 70000  | 1            |
+
+Now we want to \`merge\` to the DataFrame \`department\` to get the \`name\` of the department. In the same step, we can also select only the columns needed for the final output. 
+
+\`\`\`python
+employee_department = top_salary.merge(department, left_on='departmentId', right_on='id')[['name_y', 'name_x', 'salary']]
+\`\`\`
+| name_y | name_x | salary |
+| ------ | ------ | ------ |
+| IT     | Joe    | 85000  |
+| IT     | Max    | 90000  |
+| IT     | Randy  | 85000  |
+| IT     | Will   | 70000  |
+| Sales  | Henry  | 80000  |
+| Sales  | Sam    | 60000  |
+
+
+We are almost there! To get the final output, we need to update the column name as per requested.
+
+\`\`\`python
+return employee_department.rename(columns = {'name_y': 'Department', 'name_x': 'Employee', 'salary': 'Salary'})
+\`\`\`
+
+<!-- h4 for sections -->
+#### Implementation
+<iframe src="https://leetcode.com/playground/WbvUZqck/shared" frameBorder="0" width="100%" height="208" name="WbvUZqck"></iframe>
+---
+
+## Database
+
+### Approach 1: Return the First n Rows Using Correlated Subquery
+
+<!-- h4 for sections -->
+#### Algorithm
+​<!-- Describe your approach to solving the problem. -->
+We can build a [correlated subquery](https://dev.mysql.com/doc/refman/8.0/en/correlated-subqueries.html) to identify the top N records from more than one category. Since the correlated subquery is dependent on the main query, the idea behind this approach is to compare the values between the main query and the subquery, so that in the subquery, at most N-1 salaries can be greater than each selected salary from the main query.
+
+To do this, we first build the main query. In the main query, we can also join the table \`Employee\` to the table \`Department\` on \`departmentId\` to get the \`name\` of the departments and rename the columns as requested by the final output. 
+
+\`\`\`sql
+SELECT d.name AS 'Department', 
+       e1.name AS 'Employee', 
+       e1.salary AS 'Salary' 
+FROM Employee e1
+JOIN Department d
+ON e1.departmentId = d.id 
+\`\`\`
+
+In the correlated subquery, we select the number of salaries from the same table \`Employee\`. To compare the salaries between the main query and the subquery, we make sure the department is the same from both queries, but the salary from the subquery is always bigger than the salary from the main query. 
+
+\`\`\`sql
+(
+    SELECT COUNT(DISTINCT e2.salary)
+    FROM Employee e2
+    WHERE e2.salary > e1.salary AND e1.departmentId = e2.departmentId
+)
+\`\`\`
+
+Since we need to identify the top three high earners in the main query, and the subquery always has larger salaries than the salaries from the main query, the maximum count of the larger salaries in the subquery is two. We add this criteria as a filter to the main query.
+
+<!-- h4 for sections -->
+#### Implementation
+
+\`\`\`sql
+SELECT d.name AS 'Department', 
+       e1.name AS 'Employee', 
+       e1.salary AS 'Salary' 
+FROM Employee e1
+JOIN Department d
+ON e1.departmentId = d.id 
+WHERE
+    3 > (SELECT COUNT(DISTINCT e2.salary)
+        FROM Employee e2
+        WHERE e2.salary > e1.salary AND e1.departmentId = e2.departmentId);
+\`\`\`
+​
+<!-- an empty line to separate approaches -->
+
+<!-- h3 for approaches -->
+### Approach 2: Return the First n Rows Using DENSE_RANK()
+
+<!-- h4 for sections -->
+#### Algorithm
+​<!-- Describe your approach to solving the problem. -->
+Unlike the previous approach that utilized a correlated subquery, in this approach, we sorted the salaries in descending order, ranked employees based on their salaries within the department, and selected only the first 3 employees for the final output.
+
+We first create a subquery or CTE to rank the employees. Since the definition of a high earner is the employee who has a salary in the top three **unique** salaries for the department, we can use the function \`DENSE_RANK()\` to avoid the scenario that employees from the same department make the same amount of salary. In this step, we can also join the table \`Department\` on \`departmentId\` to get the \`name\` of the departments and rename the columns for the final output. 
+
+\`\`\`sql
+WITH employee_department AS
+    (
+    SELECT d.id, 
+        d.name AS Department, 
+        salary AS Salary, 
+        e.name AS Employee, 
+        DENSE_RANK()OVER(PARTITION BY d.id ORDER BY salary DESC) AS rnk
+    FROM Department d
+    JOIN Employee e
+    ON d.id = e.departmentId
+    )
+\`\`\`
+
+Now, each employee has a rank based on the \`salary\` in a descending order for each department. 
+
+| id | Department | Salary | Employee | rnk |
+| -- | ---------- | ------ | -------- | --- |
+| 1  | IT         | 90000  | Max      | 1   |
+| 1  | IT         | 85000  | Joe      | 2   |
+| 1  | IT         | 85000  | Randy    | 2   |
+| 1  | IT         | 70000  | Will     | 3   |
+| 1  | IT         | 69000  | Janet    | 4   |
+| 2  | Sales      | 80000  | Henry    | 1   |
+| 2  | Sales      | 60000  | Sam      | 2   |
+
+With the rank, we can select the high earners. We can add the filter to select employees that have a rank smaller than or equal to 3 in the main query. 
+
+\`\`\`sql
+SELECT Department, Employee, Salary
+FROM employee_department
+WHERE rnk <= 3
+\`\`\`
+<!-- h4 for sections -->
+#### Implementation
+
+\`\`\`mysql []
+WITH employee_department AS
+    (
+    SELECT d.id, 
+        d.name AS Department, 
+        salary AS Salary, 
+        e.name AS Employee, 
+        DENSE_RANK()OVER(PARTITION BY d.id ORDER BY salary DESC) AS rnk
+    FROM Department d
+    JOIN Employee e
+    ON d.id = e.departmentId
+    )
+SELECT Department, Employee, Salary
+FROM employee_department
+WHERE rnk <= 3
+\`\`\`
+​
+----
+<!-- an empty line to separate approaches -->`,
         "originalCategory": "subqueries"
     }
 ];
