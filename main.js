@@ -67,6 +67,7 @@ let db = null;
 let SQL = null;
 let currentProblem = null;
 let currentIndex = -1;
+let cmEditor = null; // CodeMirror instance
 
 // ─── Persistent Completion Tracking ───
 const STORAGE_KEY = 'sql_mastery_solved';
@@ -373,7 +374,7 @@ function selectProblem(prob) {
     document.getElementById('problem-counter').textContent = `${currentIndex + 1} / ${allProblems.length}`;
 
     // Reset editor
-    document.getElementById('sql-editor').value = '-- Write your MySQL query statement below\n';
+    if (cmEditor) cmEditor.setValue('-- Write your MySQL query statement below\n');
     document.getElementById('result-view').innerHTML = '<div class="empty-state"><p>Click <strong>Run</strong> to see results</p></div>';
 
     // Render test cases
@@ -534,7 +535,7 @@ function generateTableHTML(columns, values) {
 
 function runQuery() {
     if (!currentProblem || !db) return;
-    const query = document.getElementById('sql-editor').value;
+    const query = cmEditor ? cmEditor.getValue() : '';
     if (!query.trim()) {
         document.getElementById('result-view').innerHTML = '<div class="empty-state"><p>Enter a query and click <strong>Run</strong></p></div>';
         showResultTab('result');
@@ -556,7 +557,7 @@ function runQuery() {
 async function submitQuery() {
     if (!currentProblem) return;
 
-    const query = document.getElementById('sql-editor').value;
+    const query = cmEditor ? cmEditor.getValue() : '';
     const resultView = document.getElementById('result-view');
     resultView.innerHTML = '<div class="empty-state"><p>Submitting...</p></div>';
     showResultTab('result');
@@ -704,36 +705,45 @@ function initGutter() {
     });
 }
 
-// ─── Code Editor Line Numbers & Sync ───
-function updateLineNumbers() {
-    const editor = document.getElementById('sql-editor');
-    const lineNumbers = document.getElementById('line-numbers');
-    const text = editor.value;
-    const lines = text.split('\n').length;
+// ─── CodeMirror Editor Initialization ───
+function initCodeMirror() {
+    const editorContainer = document.getElementById('sql-editor');
+    cmEditor = CodeMirror(editorContainer, {
+        value: '-- Write your MySQL query statement below\n',
+        mode: 'text/x-mysql',
+        theme: 'dracula',
+        lineNumbers: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        indentWithTabs: false,
+        smartIndent: true,
+        tabSize: 4,
+        indentUnit: 4,
+        lineWrapping: false,
+        autofocus: false,
+        placeholder: '-- Write your MySQL query statement below',
+        extraKeys: {
+            'Ctrl-Space': 'autocomplete',
+            'Ctrl-Enter': function() { runQuery(); },
+            'Cmd-Enter': function() { runQuery(); },
+            'Tab': function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection('add');
+                } else {
+                    cm.replaceSelection('    ', 'end');
+                }
+            }
+        },
+        hintOptions: {
+            completeSingle: false
+        }
+    });
 
-    // Calculate current line based on cursor position
-    const cursorPos = editor.selectionStart;
-    const currentLine = text.substring(0, cursorPos).split('\n').length;
-
-    let html = '';
-    for (let i = 1; i <= lines; i++) {
-        const activeClass = i === currentLine ? 'active' : '';
-        html += `<div class="${activeClass}">${i}</div>`;
-    }
-    lineNumbers.innerHTML = html;
-}
-
-function initEditorSync() {
-    const editor = document.getElementById('sql-editor');
-    const lineNumbers = document.getElementById('line-numbers');
-
-    editor.addEventListener('input', updateLineNumbers);
-    editor.addEventListener('click', updateLineNumbers);
-    editor.addEventListener('keyup', updateLineNumbers);
-
-    // Sync scrolling
-    editor.addEventListener('scroll', () => {
-        lineNumbers.scrollTop = editor.scrollTop;
+    // Auto-trigger SQL hints on typing
+    cmEditor.on('inputRead', function(cm, change) {
+        if (change.text[0].match(/[a-zA-Z_]/)) {
+            CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
+        }
     });
 }
 
@@ -742,8 +752,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initSQL();
     renderProblemList();
     initGutter();
-    initEditorSync();
-    updateLineNumbers();
+    initCodeMirror();
 
     // Tab clicks
     document.getElementById('tab-description').onclick = () => showTab('description');

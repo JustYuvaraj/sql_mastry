@@ -530,58 +530,102 @@ body {
 .code-editor-area {
     flex: 1;
     display: flex;
+    flex-direction: column;
     background: var(--bg-code);
     position: relative;
     overflow: hidden;
 }
 
-.line-numbers {
-    width: 45px;
-    padding: 16px 0;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: #007aff;
-    /* LeetCode Blue for line numbers */
-    text-align: right;
-    padding-right: 12px;
-    background: var(--bg-layer-2);
-    border-right: 1px solid var(--border-light);
-    user-select: none;
-    line-height: 24px;
-    /* Fixed px height for perfect sync */
-    overflow: hidden;
-    /* Prevent its own scrollbar */
-}
-
-.line-numbers div.active {
-    color: var(--text-primary);
-    font-weight: bold;
-    background: rgba(0, 122, 255, 0.1);
-}
-
-textarea#sql-editor {
+/* ─── CodeMirror Overrides (LeetCode-style) ─── */
+#sql-editor {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    /* Match gutter font size */
-    padding: 16px 12px;
-    resize: none;
-    outline: none;
-    line-height: 24px;
-    /* Match gutter line height */
-    tab-size: 4;
-    white-space: pre;
-    /* Essential for line number alignment */
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-textarea#sql-editor::placeholder {
-    color: var(--green-s);
-    /* LeetCode Green for initial comment */
-    opacity: 1;
+#sql-editor .CodeMirror {
+    flex: 1;
+    height: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    background: #282a36;
+}
+
+/* Line number gutter */
+#sql-editor .CodeMirror-gutters {
+    background: #21222c;
+    border-right: 1px solid var(--border-light);
+}
+
+#sql-editor .CodeMirror-linenumber {
+    color: #6272a4;
+    font-size: 12px;
+    padding: 0 8px 0 4px;
+}
+
+/* Active line highlight */
+#sql-editor .CodeMirror-activeline-background {
+    background: rgba(68, 71, 90, 0.4);
+}
+
+/* Cursor */
+#sql-editor .CodeMirror-cursor {
+    border-left-color: #f8f8f2;
+    border-left-width: 2px;
+}
+
+/* Selection */
+#sql-editor .CodeMirror-selected {
+    background: rgba(98, 114, 164, 0.4) !important;
+}
+
+/* Matching brackets */
+#sql-editor .CodeMirror-matchingbracket {
+    color: #50fa7b !important;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Autocomplete hints dropdown */
+.CodeMirror-hints {
+    background: var(--bg-layer-2) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 13px !important;
+    z-index: 3000 !important;
+}
+
+.CodeMirror-hint {
+    color: var(--text-primary) !important;
+    padding: 4px 10px !important;
+    border-radius: 4px;
+}
+
+.CodeMirror-hint-active {
+    background: var(--border-light) !important;
+    color: #50fa7b !important;
+}
+
+/* Scrollbar inside CodeMirror */
+#sql-editor .CodeMirror-vscrollbar::-webkit-scrollbar,
+#sql-editor .CodeMirror-hscrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+#sql-editor .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+#sql-editor .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+#sql-editor .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+#sql-editor .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* SQL Schema Link */
